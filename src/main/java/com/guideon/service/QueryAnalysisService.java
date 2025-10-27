@@ -120,23 +120,44 @@ public class QueryAnalysisService {
      * AI 응답을 파싱하여 QueryAnalysisResult 객체 생성
      */
     private QueryAnalysisResult parseAnalysisResponse(String originalQuery, String aiResponse) {
+        logger.debug("AI Response (raw): {}", aiResponse);
+
         QueryAnalysisResult result = new QueryAnalysisResult();
         result.setOriginalQuery(originalQuery);
 
         // KEYWORDS 추출
         List<String> keywords = extractField(aiResponse, "KEYWORDS");
+        logger.debug("Extracted keywords: {}", keywords);
         result.setKeywords(keywords);
 
         // REGULATION_TYPES 추출
         List<String> regulationTypes = extractField(aiResponse, "REGULATION_TYPES");
-        result.setRegulationTypes(regulationTypes);
+        logger.debug("Extracted regulation types: {}", regulationTypes);
+
+        // 규정 유형 검증 및 정리
+        List<String> validatedTypes = new ArrayList<>();
+        for (String type : regulationTypes) {
+            String cleanType = type.trim();
+            if (!cleanType.isEmpty() && !cleanType.equals("일반")) {
+                validatedTypes.add(cleanType);
+            }
+        }
+
+        if (validatedTypes.isEmpty()) {
+            validatedTypes.add("일반");
+        }
+
+        logger.debug("Validated regulation types: {}", validatedTypes);
+        result.setRegulationTypes(validatedTypes);
 
         // INTENT 추출
         String intent = extractSingleField(aiResponse, "INTENT");
+        logger.debug("Extracted intent: {}", intent);
         result.setIntent(intent);
 
         // SEARCH_QUERY 추출
         String searchQuery = extractSingleField(aiResponse, "SEARCH_QUERY");
+        logger.debug("Extracted search query: {}", searchQuery);
         result.setSearchQuery(searchQuery);
 
         return result;

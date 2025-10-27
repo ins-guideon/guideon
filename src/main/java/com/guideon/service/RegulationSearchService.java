@@ -11,7 +11,7 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
+import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
@@ -50,8 +50,12 @@ public class RegulationSearchService {
                 .temperature(0.2)
                 .build();
 
-        // Embedding Model 초기화 (로컬 모델 사용)
-        this.embeddingModel = new AllMiniLmL6V2EmbeddingModel();
+        // Google AI Gemini Embedding Model 초기화 (한국어 지원)
+        this.embeddingModel = GoogleAiEmbeddingModel.builder()
+                .apiKey(apiKey)
+                .modelName("text-embedding-004")
+                .maxRetries(3)
+                .build();
 
         // In-Memory Embedding Store (실제 운영시 Qdrant로 교체)
         this.embeddingStore = new InMemoryEmbeddingStore<>();
@@ -78,8 +82,12 @@ public class RegulationSearchService {
                 .temperature(0.2)
                 .build();
 
-        // Embedding Model 초기화 (로컬 모델 사용)
-        this.embeddingModel = new AllMiniLmL6V2EmbeddingModel();
+        // Google AI Gemini Embedding Model 초기화 (한국어 지원)
+        this.embeddingModel = GoogleAiEmbeddingModel.builder()
+                .apiKey(geminiApiKey)
+                .modelName("text-embedding-004")
+                .maxRetries(3)
+                .build();
 
         // In-Memory Embedding Store (실제 운영시 Qdrant로 교체)
         this.embeddingStore = new InMemoryEmbeddingStore<>();

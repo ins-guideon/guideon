@@ -189,6 +189,13 @@ public class ConfigLoader {
      * 임베딩 모델 이름
      */
     public String getEmbeddingModelName() {
-        return getProperty("embedding.model.name", "all-minilm-l6-v2");
+        return getProperty("embedding.model.name", "text-embedding-004");
+    }
+
+    /**
+     * 임베딩 차원
+     */
+    public int getEmbeddingDimension() {
+        return getIntProperty("embedding.dimension", 768);
     }
 }

@@ -2,6 +2,10 @@ server:
   port: 8080
   servlet:
     context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
   error:
     include-message: always
     include-stacktrace: on_param
@@ -19,17 +23,22 @@ spring:
   mvc:
     throw-exception-if-no-handler-found: true
     static-path-pattern: /static/**
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 # Google Gemini API Configuration
 gemini:
   api:
     key: ${GOOGLE_API_KEY:AIzaSyDON4b4pkFQqAhiEiB3e_KrHCjK9kq32Y0}
 
-# Embedding Configuration
+# Embedding Configuration (Google AI Gemini - 한국어 지원)
 embedding:
   model:
-    name: all-minilm-l6-v2
-  dimension: 384
+    name: text-embedding-004
+  dimension: 768
 
 # Vector Search Configuration
 vector:
@@ -59,6 +68,9 @@ logging:
     dev.langchain4j: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  charset:
+    console: UTF-8
+    file: UTF-8
 
 # Regulation Types
 regulation:
