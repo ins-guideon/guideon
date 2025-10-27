@@ -14,7 +14,6 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
-import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,7 @@ public class RegulationSearchService {
 
     private final ChatLanguageModel chatModel;
     private final EmbeddingModel embeddingModel;
-    private final EmbeddingStore<TextSegment> embeddingStore;
+    private InMemoryEmbeddingStore<TextSegment> embeddingStore;
 
     private final int maxResults;
     private final double minScore;
@@ -300,5 +299,20 @@ public class RegulationSearchService {
     public int getIndexedSegmentsCount() {
         // InMemoryEmbeddingStore는 size 메서드가 없으므로 별도 카운터 필요
         return 0; // TODO: 실제 카운트 구현
+    }
+
+    /**
+     * 현재 임베딩 스토어 반환 (영속성을 위해)
+     */
+    public InMemoryEmbeddingStore<TextSegment> getEmbeddingStore() {
+        return embeddingStore;
+    }
+
+    /**
+     * 임베딩 스토어 설정 (로드시 사용)
+     */
+    public void setEmbeddingStore(InMemoryEmbeddingStore<TextSegment> embeddingStore) {
+        this.embeddingStore = embeddingStore;
+        logger.info("Embedding store has been updated");
     }
 }

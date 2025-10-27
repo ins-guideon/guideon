@@ -1,0 +1,92 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-stacktrace: on_param
+
+spring:
+  application:
+    name: guideon
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  web:
+    resources:
+      add-mappings: true
+  mvc:
+    throw-exception-if-no-handler-found: true
+    static-path-pattern: /static/**
+
+# Google Gemini API Configuration
+gemini:
+  api:
+    key: ${GOOGLE_API_KEY:AIzaSyDON4b4pkFQqAhiEiB3e_KrHCjK9kq32Y0}
+
+# Embedding Configuration
+embedding:
+  model:
+    name: all-minilm-l6-v2
+  dimension: 384
+
+# Vector Search Configuration
+vector:
+  search:
+    max-results: 5
+    min-score: 0.5
+
+# RAG Configuration
+rag:
+  chunk:
+    size: 500
+    overlap: 100
+
+# Vector Store Persistence Configuration
+vectorstore:
+  persistence:
+    enabled: true
+    data-dir: ${user.home}/guideon/data
+    auto-save: true
+    auto-load: true
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.guideon: INFO
+    dev.langchain4j: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Regulation Types
+regulation:
+  types:
+    - 이사회규정
+    - 접대비사용규정
+    - 윤리규정
+    - 출장여비지급규정
+    - 주식매수선택권운영규정
+    - 노사협의회규정
+    - 취업규칙
+    - 매출채권관리규정
+    - 금융자산 운용규정
+    - 문서관리규정
+    - 재고관리규정
+    - 계약검토규정
+    - 사규관리규정
+    - 임원퇴직금지급규정
+    - 임원보수규정
+    - 주주총회운영규정
+    - 경비지급규정
+    - 복리후생비규정
+    - 보안관리규정
+    - 위임전결규정
+    - 우리사주운영규정
+    - 내부정보관리규정
+    - 회계관리규정
+    - 특수관계자 거래규정
+    - 조직 및 업무분장규정
+    - 자금관리규정
+    - 인장관리규정
