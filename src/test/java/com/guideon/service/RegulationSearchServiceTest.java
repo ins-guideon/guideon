@@ -28,7 +28,8 @@ class RegulationSearchServiceTest {
         config = new ConfigLoader();
 
         try {
-            service = new RegulationSearchService(config);
+            // Hybrid Search는 테스트에서 비활성화 (null 전달)
+            service = new RegulationSearchService(config, null);
             System.out.println("✓ RegulationSearchService 초기화 성공");
 
             // 테스트용 샘플 문서 인덱싱

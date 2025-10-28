@@ -261,4 +261,61 @@ public class ConfigLoader {
     public double getReRankingMinScore() {
         return getDoubleProperty("reranking.min.score", 0.8);
     }
+
+    /**
+     * Hybrid Search 활성화 여부
+     */
+    public boolean isHybridSearchEnabled() {
+        String enabled = getProperty("hybrid.search.enabled", "false");
+        return Boolean.parseBoolean(enabled);
+    }
+
+    /**
+     * Hybrid Search Vector 가중치
+     */
+    public double getHybridVectorWeight() {
+        return getDoubleProperty("hybrid.search.vector.weight", 0.6);
+    }
+
+    /**
+     * Hybrid Search Keyword 가중치
+     */
+    public double getHybridKeywordWeight() {
+        return getDoubleProperty("hybrid.search.keyword.weight", 0.4);
+    }
+
+    /**
+     * Hybrid Search 초기 결과 수
+     */
+    public int getHybridInitialResults() {
+        return getIntProperty("hybrid.search.initial.results", 40);
+    }
+
+    /**
+     * BM25 인덱스 디렉토리
+     */
+    public String getBM25IndexDirectory() {
+        String path = getProperty("bm25.index.directory", System.getProperty("user.home") + "/guideon/data/bm25-index");
+
+        // ${user.home} 변수 해석
+        if (path.contains("${user.home}")) {
+            path = path.replace("${user.home}", System.getProperty("user.home"));
+        }
+
+        return path;
+    }
+
+    /**
+     * BM25 K1 파라미터
+     */
+    public double getBM25K1() {
+        return getDoubleProperty("bm25.k1", 1.2);
+    }
+
+    /**
+     * BM25 B 파라미터
+     */
+    public double getBM25B() {
+        return getDoubleProperty("bm25.b", 0.75);
+    }
 }

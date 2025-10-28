@@ -1,9 +1,12 @@
 package com.guideon.service;
 
 import com.guideon.config.ConfigLoader;
+import com.guideon.model.HybridSearchResult;
 import com.guideon.model.QueryAnalysisResult;
 import com.guideon.model.RegulationReference;
 import com.guideon.model.RegulationSearchResult;
+import com.guideon.model.ScoredSegment;
+import com.guideon.util.SearchResultConverter;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
@@ -34,6 +37,7 @@ public class RegulationSearchService {
     private final EmbeddingModel embeddingModel;
     private InMemoryEmbeddingStore<TextSegment> embeddingStore;
     private final ScoringModel scoringModel;
+    private final HybridSearchService hybridSearchService;
 
     private final int maxResults;
     private final double minScore;
@@ -46,10 +50,13 @@ public class RegulationSearchService {
     private final int reRankingFinalResults;
     private final double reRankingMinScore;
 
+    // Hybrid Search 설정
+    private final boolean hybridSearchEnabled;
+
     /**
      * application.properties 기반 생성자
      */
-    public RegulationSearchService(ConfigLoader config) {
+    public RegulationSearchService(ConfigLoader config, HybridSearchService hybridSearchService) {
         String apiKey = config.getGeminiApiKey();
 
         // Gemini Chat Model 초기화
@@ -68,6 +75,10 @@ public class RegulationSearchService {
 
         // In-Memory Embedding Store (실제 운영시 Qdrant로 교체)
         this.embeddingStore = new InMemoryEmbeddingStore<>();
+
+        // Hybrid Search Service
+        this.hybridSearchService = hybridSearchService;
+        this.hybridSearchEnabled = config.isHybridSearchEnabled();
 
         // Properties에서 설정값 로드
         this.maxResults = config.getVectorSearchMaxResults();
@@ -100,8 +111,8 @@ public class RegulationSearchService {
             }
         }
 
-        logger.info("RegulationSearchService initialized with maxResults={}, minScore={}, chunkSize={}, chunkOverlap={}, reRankingEnabled={}",
-                maxResults, minScore, chunkSize, chunkOverlap, reRankingEnabled && scoringModel != null);
+        logger.info("RegulationSearchService initialized with maxResults={}, minScore={}, chunkSize={}, chunkOverlap={}, reRankingEnabled={}, hybridSearchEnabled={}",
+                maxResults, minScore, chunkSize, chunkOverlap, reRankingEnabled && scoringModel != null, hybridSearchEnabled);
     }
 
     /**
@@ -126,6 +137,10 @@ public class RegulationSearchService {
         // In-Memory Embedding Store (실제 운영시 Qdrant로 교체)
         this.embeddingStore = new InMemoryEmbeddingStore<>();
 
+        // Hybrid Search (비활성화)
+        this.hybridSearchService = null;
+        this.hybridSearchEnabled = false;
+
         // 기본값 사용
         this.maxResults = 5;
         this.minScore = 0.5;
@@ -139,7 +154,7 @@ public class RegulationSearchService {
         this.reRankingMinScore = 0.8;
         this.scoringModel = null;
 
-        logger.info("RegulationSearchService initialized with default values (ReRanking disabled)");
+        logger.info("RegulationSearchService initialized with default values (ReRanking disabled, Hybrid Search disabled)");
     }
 
     /**
@@ -161,13 +176,29 @@ public class RegulationSearchService {
             segment.metadata().put("regulation_type", regulationType);
         }
 
-        // 임베딩 생성 및 저장
+        // 임베딩 생성 및 Vector Store에 저장
+        int segmentIndex = 0;
         for (TextSegment segment : segments) {
             Embedding embedding = embeddingModel.embed(segment).content();
-            embeddingStore.add(embedding, segment);
+            String embeddingId = embeddingStore.add(embedding, segment);
+
+            // Hybrid Search가 활성화된 경우 BM25 인덱스에도 추가
+            if (hybridSearchEnabled && hybridSearchService != null) {
+                String segmentId = embeddingId != null ? embeddingId :
+                    String.format("%s_segment_%d", regulationType, segmentIndex);
+                hybridSearchService.indexSegment(segment, regulationType, segmentId);
+            }
+
+            segmentIndex++;
         }
 
-        logger.info("Indexed {} segments for {}", segments.size(), regulationType);
+        // BM25 인덱스 커밋 (변경사항 저장)
+        if (hybridSearchEnabled && hybridSearchService != null) {
+            hybridSearchService.commit();
+        }
+
+        logger.info("Indexed {} segments for {} (Vector: YES, BM25: {})",
+                segments.size(), regulationType, hybridSearchEnabled ? "YES" : "NO");
     }
 
     /**
@@ -177,29 +208,17 @@ public class RegulationSearchService {
         logger.info("Searching regulations for query: {}", analysis.getOriginalQuery());
 
         try {
-            // 1. 벡터 검색 수행 (ReRanking 활성화 시 더 많은 후보 검색)
             List<EmbeddingMatch<TextSegment>> relevantSegments;
 
-            if (reRankingEnabled && scoringModel != null) {
-                // Stage 1: 넓게 검색 (초기 후보)
-                relevantSegments = performVectorSearch(
-                        analysis.getSearchQuery(),
-                        reRankingInitialResults,
-                        minScore  // 낮은 threshold로 넓게 검색
-                );
-
-                logger.info("Stage 1 (Vector Search): Retrieved {} candidates", relevantSegments.size());
-
-                // Stage 2: ReRanking으로 정교하게 필터링
-                if (!relevantSegments.isEmpty()) {
-                    relevantSegments = performReRanking(
-                            analysis.getSearchQuery(),
-                            relevantSegments
-                    );
-                    logger.info("Stage 2 (ReRanking): Refined to {} results", relevantSegments.size());
-                }
+            // Hybrid Search 활성화 여부에 따라 검색 방식 선택
+            if (hybridSearchEnabled && hybridSearchService != null) {
+                // Hybrid Search 수행 (Vector + BM25 + RRF)
+                relevantSegments = performHybridSearch(analysis.getSearchQuery());
+            } else if (reRankingEnabled && scoringModel != null) {
+                // ReRanking 수행 (Vector + ReRanking)
+                relevantSegments = performVectorSearchWithReRanking(analysis.getSearchQuery());
             } else {
-                // ReRanking 비활성화 시 기본 벡터 검색만 수행
+                // 기본 Vector Search만 수행
                 relevantSegments = performVectorSearch(
                         analysis.getSearchQuery(),
                         maxResults,
@@ -241,6 +260,64 @@ public class RegulationSearchService {
             logger.error("Error during regulation search", e);
             return createErrorResponse();
         }
+    }
+
+    /**
+     * Hybrid Search 수행 (Vector + BM25 + RRF)
+     */
+    private List<EmbeddingMatch<TextSegment>> performHybridSearch(String query) {
+        logger.info("Performing Hybrid Search (Vector + BM25 + RRF)");
+
+        // Hybrid Search 수행
+        int searchMaxResults = reRankingEnabled ? reRankingInitialResults : maxResults;
+        HybridSearchResult hybridResult = hybridSearchService.search(query, searchMaxResults);
+
+        logger.info("Hybrid Search completed: {} results (Vector: {}, BM25: {}, Fused: {}) in {}ms",
+                hybridResult.getFusedResultCount(),
+                hybridResult.getVectorResultCount(),
+                hybridResult.getBm25ResultCount(),
+                hybridResult.getFusedResultCount(),
+                hybridResult.getSearchTimeMs());
+
+        // ScoredSegment를 EmbeddingMatch로 변환 (embedding은 null - ReRanking에서 필요없음)
+        List<EmbeddingMatch<TextSegment>> matches = hybridResult.getSegments().stream()
+                .map(SearchResultConverter::toEmbeddingMatch)
+                .collect(Collectors.toList());
+
+        logger.info("Converted {} ScoredSegments to EmbeddingMatches", matches.size());
+
+        // ReRanking 적용 (선택적)
+        if (reRankingEnabled && scoringModel != null && !matches.isEmpty()) {
+            logger.info("Applying ReRanking on Hybrid Search results ({} candidates)", matches.size());
+            matches = performReRanking(query, matches);
+            logger.info("ReRanking completed: {} results", matches.size());
+        }
+
+        return matches;
+    }
+
+    /**
+     * Vector Search + ReRanking 수행
+     */
+    private List<EmbeddingMatch<TextSegment>> performVectorSearchWithReRanking(String query) {
+        logger.info("Performing Vector Search with ReRanking");
+
+        // Stage 1: 넓게 검색 (초기 후보)
+        List<EmbeddingMatch<TextSegment>> relevantSegments = performVectorSearch(
+                query,
+                reRankingInitialResults,
+                minScore  // 낮은 threshold로 넓게 검색
+        );
+
+        logger.info("Stage 1 (Vector Search): Retrieved {} candidates", relevantSegments.size());
+
+        // Stage 2: ReRanking으로 정교하게 필터링
+        if (!relevantSegments.isEmpty()) {
+            relevantSegments = performReRanking(query, relevantSegments);
+            logger.info("Stage 2 (ReRanking): Refined to {} results", relevantSegments.size());
+        }
+
+        return relevantSegments;
     }
 
     /**

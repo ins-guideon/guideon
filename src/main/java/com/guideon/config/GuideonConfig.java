@@ -1,12 +1,12 @@
 package com.guideon.config;
 
-import com.guideon.service.QueryAnalysisService;
-import com.guideon.service.RegulationSearchService;
-import com.guideon.service.VectorStoreService;
+import com.guideon.service.*;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.io.IOException;
 
 /**
  * Guideon Service Configuration
@@ -33,11 +33,67 @@ public class GuideonConfig {
     }
 
     /**
+     * EmbeddingService Bean
+     */
+    @Bean
+    public EmbeddingService embeddingService(ConfigLoader configLoader) {
+        return new EmbeddingService(configLoader);
+    }
+
+    /**
+     * BM25 검색 서비스 Bean
+     */
+    @Bean
+    public BM25SearchService bm25SearchService(ConfigLoader configLoader) throws IOException {
+        if (configLoader.isHybridSearchEnabled()) {
+            org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
+                .info("Initializing BM25SearchService for Hybrid Search");
+            return new BM25SearchService(configLoader);
+        } else {
+            org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
+                .info("Hybrid Search is disabled, BM25SearchService will not be initialized");
+            return null;
+        }
+    }
+
+    /**
+     * Hybrid 검색 서비스 Bean
+     */
+    @Bean
+    public HybridSearchService hybridSearchService(
+            ConfigLoader configLoader,
+            BM25SearchService bm25SearchService,
+            EmbeddingService embeddingService) {
+
+        if (configLoader.isHybridSearchEnabled() && bm25SearchService != null) {
+            org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
+                .info("Initializing HybridSearchService");
+
+            InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
+
+            return new HybridSearchService(
+                bm25SearchService,
+                embeddingStore,
+                embeddingService,
+                configLoader
+            );
+        } else {
+            org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
+                .info("Hybrid Search is disabled, HybridSearchService will not be initialized");
+            return null;
+        }
+    }
+
+    /**
      * 규정 검색 서비스 Bean
      */
     @Bean
-    public RegulationSearchService regulationSearchService(ConfigLoader configLoader, VectorStoreService vectorStoreService) {
-        RegulationSearchService service = new RegulationSearchService(configLoader);
+    public RegulationSearchService regulationSearchService(
+            ConfigLoader configLoader,
+            VectorStoreService vectorStoreService,
+            HybridSearchService hybridSearchService) {
+
+        RegulationSearchService service = new RegulationSearchService(configLoader, hybridSearchService);
 
         // 서버 시작 시 저장된 벡터 데이터 로드
         try {
@@ -54,10 +110,24 @@ public class GuideonConfig {
             }
 
             service.setEmbeddingStore(store);
+
+            // Hybrid Search가 활성화된 경우 동일한 스토어 공유
+            if (hybridSearchService != null && configLoader.isHybridSearchEnabled()) {
+                hybridSearchService.setEmbeddingStore(store);
+                org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
+                    .info("Hybrid Search enabled: Vector Store shared with HybridSearchService");
+            }
+
         } catch (Exception e) {
             org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
                 .error("Failed to load embedding store, creating new one", e);
-            service.setEmbeddingStore(new InMemoryEmbeddingStore<>());
+            InMemoryEmbeddingStore<TextSegment> newStore = new InMemoryEmbeddingStore<>();
+            service.setEmbeddingStore(newStore);
+
+            // Hybrid Search에도 동일한 스토어 설정
+            if (hybridSearchService != null && configLoader.isHybridSearchEnabled()) {
+                hybridSearchService.setEmbeddingStore(newStore);
+            }
         }
 
         return service;

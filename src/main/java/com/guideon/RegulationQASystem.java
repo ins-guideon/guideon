@@ -31,9 +31,10 @@ public class RegulationQASystem {
     public RegulationQASystem() {
         this.config = new ConfigLoader();
         this.queryAnalysisService = new QueryAnalysisService(config);
-        this.regulationSearchService = new RegulationSearchService(config);
+        // Hybrid Search는 Spring Bean 컨텍스트에서만 사용 가능
+        this.regulationSearchService = new RegulationSearchService(config, null);
 
-        logger.info("RegulationQASystem initialized from application.properties");
+        logger.info("RegulationQASystem initialized from application.properties (Hybrid Search disabled)");
     }
 
     /**
@@ -42,9 +43,10 @@ public class RegulationQASystem {
     public RegulationQASystem(String configFilePath) {
         this.config = new ConfigLoader(configFilePath);
         this.queryAnalysisService = new QueryAnalysisService(config);
-        this.regulationSearchService = new RegulationSearchService(config);
+        // Hybrid Search는 Spring Bean 컨텍스트에서만 사용 가능
+        this.regulationSearchService = new RegulationSearchService(config, null);
 
-        logger.info("RegulationQASystem initialized from: {}", configFilePath);
+        logger.info("RegulationQASystem initialized from: {} (Hybrid Search disabled)", configFilePath);
     }
 
     /**
@@ -53,9 +55,10 @@ public class RegulationQASystem {
     public RegulationQASystem(ConfigLoader config) {
         this.config = config;
         this.queryAnalysisService = new QueryAnalysisService(config);
-        this.regulationSearchService = new RegulationSearchService(config);
+        // Hybrid Search는 Spring Bean 컨텍스트에서만 사용 가능
+        this.regulationSearchService = new RegulationSearchService(config, null);
 
-        logger.info("RegulationQASystem initialized with provided ConfigLoader");
+        logger.info("RegulationQASystem initialized with provided ConfigLoader (Hybrid Search disabled)");
     }
 
     /**
