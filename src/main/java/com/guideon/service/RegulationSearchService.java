@@ -10,9 +10,11 @@ import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.cohere.CohereScoringModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
+import dev.langchain4j.model.scoring.ScoringModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import org.slf4j.Logger;
@@ -31,11 +33,18 @@ public class RegulationSearchService {
     private final ChatLanguageModel chatModel;
     private final EmbeddingModel embeddingModel;
     private InMemoryEmbeddingStore<TextSegment> embeddingStore;
+    private final ScoringModel scoringModel;
 
     private final int maxResults;
     private final double minScore;
     private final int chunkSize;
     private final int chunkOverlap;
+
+    // ReRanking 설정
+    private final boolean reRankingEnabled;
+    private final int reRankingInitialResults;
+    private final int reRankingFinalResults;
+    private final double reRankingMinScore;
 
     /**
      * application.properties 기반 생성자
@@ -66,8 +75,33 @@ public class RegulationSearchService {
         this.chunkSize = config.getRagChunkSize();
         this.chunkOverlap = config.getRagChunkOverlap();
 
-        logger.info("RegulationSearchService initialized with maxResults={}, minScore={}, chunkSize={}, chunkOverlap={}",
-                maxResults, minScore, chunkSize, chunkOverlap);
+        // ReRanking 설정 로드
+        this.reRankingEnabled = config.isReRankingEnabled();
+        this.reRankingInitialResults = config.getReRankingInitialResults();
+        this.reRankingFinalResults = config.getReRankingFinalResults();
+        this.reRankingMinScore = config.getReRankingMinScore();
+
+        logger.info("ReRanking configuration loaded: enabled={}, initialResults={}, finalResults={}, minScore={}",
+                reRankingEnabled, reRankingInitialResults, reRankingFinalResults, reRankingMinScore);
+
+        // Cohere Scoring Model 초기화 (ReRanking용)
+        String cohereApiKey = config.getCohereApiKey();
+        logger.info("Cohere API key configured: {}", cohereApiKey != null && !cohereApiKey.isEmpty() ? "YES" : "NO");
+        if (reRankingEnabled && cohereApiKey != null && !cohereApiKey.isEmpty()) {
+            this.scoringModel = CohereScoringModel.builder()
+                    .apiKey(cohereApiKey)
+                    .modelName(config.getReRankingModelName())
+                    .build();
+            logger.info("ReRanking enabled with Cohere model: {}", config.getReRankingModelName());
+        } else {
+            this.scoringModel = null;
+            if (reRankingEnabled) {
+                logger.warn("ReRanking is enabled but Cohere API key is not configured. ReRanking will be disabled.");
+            }
+        }
+
+        logger.info("RegulationSearchService initialized with maxResults={}, minScore={}, chunkSize={}, chunkOverlap={}, reRankingEnabled={}",
+                maxResults, minScore, chunkSize, chunkOverlap, reRankingEnabled && scoringModel != null);
     }
 
     /**
@@ -98,7 +132,14 @@ public class RegulationSearchService {
         this.chunkSize = 500;
         this.chunkOverlap = 100;
 
-        logger.info("RegulationSearchService initialized with default values");
+        // ReRanking 기본값 (비활성화)
+        this.reRankingEnabled = false;
+        this.reRankingInitialResults = 20;
+        this.reRankingFinalResults = 5;
+        this.reRankingMinScore = 0.8;
+        this.scoringModel = null;
+
+        logger.info("RegulationSearchService initialized with default values (ReRanking disabled)");
     }
 
     /**
@@ -136,10 +177,36 @@ public class RegulationSearchService {
         logger.info("Searching regulations for query: {}", analysis.getOriginalQuery());
 
         try {
-            // 1. 벡터 검색 수행
-            List<EmbeddingMatch<TextSegment>> relevantSegments = performVectorSearch(
-                    analysis.getSearchQuery()
-            );
+            // 1. 벡터 검색 수행 (ReRanking 활성화 시 더 많은 후보 검색)
+            List<EmbeddingMatch<TextSegment>> relevantSegments;
+
+            if (reRankingEnabled && scoringModel != null) {
+                // Stage 1: 넓게 검색 (초기 후보)
+                relevantSegments = performVectorSearch(
+                        analysis.getSearchQuery(),
+                        reRankingInitialResults,
+                        minScore  // 낮은 threshold로 넓게 검색
+                );
+
+                logger.info("Stage 1 (Vector Search): Retrieved {} candidates", relevantSegments.size());
+
+                // Stage 2: ReRanking으로 정교하게 필터링
+                if (!relevantSegments.isEmpty()) {
+                    relevantSegments = performReRanking(
+                            analysis.getSearchQuery(),
+                            relevantSegments
+                    );
+                    logger.info("Stage 2 (ReRanking): Refined to {} results", relevantSegments.size());
+                }
+            } else {
+                // ReRanking 비활성화 시 기본 벡터 검색만 수행
+                relevantSegments = performVectorSearch(
+                        analysis.getSearchQuery(),
+                        maxResults,
+                        minScore
+                );
+                logger.info("Vector Search: Found {} results", relevantSegments.size());
+            }
 
             // 2. 검색 결과가 없으면 Fallback 응답
             if (relevantSegments.isEmpty()) {
@@ -177,9 +244,16 @@ public class RegulationSearchService {
     }
 
     /**
-     * 벡터 검색 수행
+     * 벡터 검색 수행 (기본 설정 사용)
      */
     private List<EmbeddingMatch<TextSegment>> performVectorSearch(String query) {
+        return performVectorSearch(query, maxResults, minScore);
+    }
+
+    /**
+     * 벡터 검색 수행 (파라미터 커스터마이징)
+     */
+    private List<EmbeddingMatch<TextSegment>> performVectorSearch(String query, int maxResults, double minScore) {
         Embedding queryEmbedding = embeddingModel.embed(query).content();
 
         List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(
@@ -192,8 +266,76 @@ public class RegulationSearchService {
                 .filter(match -> match.score() >= minScore)
                 .collect(Collectors.toList());
 
-        logger.debug("Found {} relevant segments", matches.size());
+        logger.debug("Found {} relevant segments (maxResults={}, minScore={})", matches.size(), maxResults, minScore);
         return matches;
+    }
+
+    /**
+     * ReRanking 수행 - Cohere Scoring Model을 사용하여 정교한 재정렬
+     */
+    private List<EmbeddingMatch<TextSegment>> performReRanking(
+            String query,
+            List<EmbeddingMatch<TextSegment>> candidates) {
+
+        if (scoringModel == null || candidates.isEmpty()) {
+            return candidates;
+        }
+
+        try {
+            // 후보 세그먼트 추출
+            List<TextSegment> segments = candidates.stream()
+                    .map(EmbeddingMatch::embedded)
+                    .collect(Collectors.toList());
+
+            // Cohere Scoring Model로 재평가
+            var scoringResponse = scoringModel.scoreAll(segments, query);
+            List<Double> scores = scoringResponse.content();
+
+            // 점수와 매칭 결과를 조합
+            List<EmbeddingMatch<TextSegment>> reRankedResults = new ArrayList<>();
+            for (int i = 0; i < candidates.size() && i < scores.size(); i++) {
+                double reRankScore = scores.get(i);
+
+                // ReRanking 최소 점수 필터링
+                if (reRankScore >= reRankingMinScore) {
+                    EmbeddingMatch<TextSegment> original = candidates.get(i);
+                    // 새로운 점수로 EmbeddingMatch 재생성
+                    EmbeddingMatch<TextSegment> reRanked = new EmbeddingMatch<>(
+                            reRankScore,
+                            original.embeddingId(),
+                            original.embedding(),
+                            original.embedded()
+                    );
+                    reRankedResults.add(reRanked);
+                }
+            }
+
+            // 점수 기준 내림차순 정렬
+            reRankedResults.sort((a, b) -> Double.compare(b.score(), a.score()));
+
+            // 최종 결과 수로 제한
+            if (reRankedResults.size() > reRankingFinalResults) {
+                reRankedResults = reRankedResults.subList(0, reRankingFinalResults);
+            }
+
+            logger.debug("ReRanking completed: {} -> {} results (minScore: {})",
+                    candidates.size(), reRankedResults.size(), reRankingMinScore);
+
+            if (logger.isDebugEnabled() && !reRankedResults.isEmpty()) {
+                String scoresStr = reRankedResults.stream()
+                        .map(r -> String.format("%.3f", r.score()))
+                        .collect(Collectors.joining(", "));
+                logger.debug("ReRanked scores: [{}]", scoresStr);
+            }
+
+            return reRankedResults;
+
+        } catch (Exception e) {
+            logger.error("Error during ReRanking, falling back to vector search results", e);
+            return candidates.stream()
+                    .limit(reRankingFinalResults)
+                    .collect(Collectors.toList());
+        }
     }
 
     /**

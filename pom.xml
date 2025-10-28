@@ -107,6 +107,13 @@
             <version>2.4.0</version>
         </dependency>
 
+        <!-- Cohere for ReRanking -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-cohere</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+
         <!-- JUnit for Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

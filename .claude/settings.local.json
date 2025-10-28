@@ -32,7 +32,11 @@
       "Bash(powershell.exe -Command \"Test-Path ''c:\\workspace2\\guideon\\run.sh''\")",
       "Bash(powershell.exe -ExecutionPolicy Bypass -File \".\\build.ps1\")",
       "Bash(powershell.exe -Command \"cd c:\\workspace2\\guideon; java -Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8 -Djansi.passthrough=true -jar target\\regulation-search-1.0.0.jar\")",
-      "Bash(powershell.exe -Command \"java ''''-Dfile.encoding=UTF-8'''' ''''-Dconsole.encoding=UTF-8'''' ''''-Djansi.passthrough=true'''' -jar target\\regulation-search-1.0.0.jar\")"
+      "Bash(powershell.exe -Command \"java ''''-Dfile.encoding=UTF-8'''' ''''-Dconsole.encoding=UTF-8'''' ''''-Djansi.passthrough=true'''' -jar target\\regulation-search-1.0.0.jar\")",
+      "Bash(powershell.exe -Command \"Get-Process java -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(Select-String -Pattern \"ReRanking|Cohere|RegulationSearchService initialized\")",
+      "Bash(Select-Object -First 10)",
+      "Bash(powershell.exe -Command \"java ''-Dfile.encoding=UTF-8'' ''-Dconsole.encoding=UTF-8'' ''-Djansi.passthrough=true'' -jar target\\regulation-search-1.0.0.jar 2>&1 | Select-String -Pattern ''ReRanking|Cohere|initialized'' | Select-Object -First 5\")"
     ],
     "deny": [],
     "ask": []

@@ -73,7 +73,13 @@ public class ConfigLoader {
         String envApiKey = System.getenv("GOOGLE_API_KEY");
         if (envApiKey != null && !envApiKey.isEmpty()) {
             properties.setProperty("gemini.api.key", envApiKey);
-            logger.info("API key overridden by environment variable");
+            logger.info("Gemini API key overridden by environment variable");
+        }
+
+        String cohereApiKey = System.getenv("COHERE_API_KEY");
+        if (cohereApiKey != null && !cohereApiKey.isEmpty()) {
+            properties.setProperty("cohere.api.key", cohereApiKey);
+            logger.info("Cohere API key overridden by environment variable");
         }
     }
 
@@ -197,5 +203,62 @@ public class ConfigLoader {
      */
     public int getEmbeddingDimension() {
         return getIntProperty("embedding.dimension", 768);
+    }
+
+    /**
+     * Cohere API 키 가져오기
+     */
+    public String getCohereApiKey() {
+        String apiKey = getProperty("cohere.api.key");
+
+        // Properties 파일에 ${COHERE_API_KEY} 형태로 작성된 경우 환경변수에서 가져오기
+        if (apiKey != null && apiKey.startsWith("${") && apiKey.endsWith("}")) {
+            String envVar = apiKey.substring(2, apiKey.length() - 1);
+            apiKey = System.getenv(envVar);
+        }
+
+        // Cohere API 키는 선택사항 (ReRanking이 비활성화될 수 있음)
+        if (apiKey == null || apiKey.isEmpty()) {
+            logger.warn("Cohere API key is not configured. ReRanking will be disabled.");
+            return null;
+        }
+
+        return apiKey;
+    }
+
+    /**
+     * ReRanking 활성화 여부
+     */
+    public boolean isReRankingEnabled() {
+        String enabled = getProperty("reranking.enabled", "false");
+        return Boolean.parseBoolean(enabled);
+    }
+
+    /**
+     * ReRanking 모델 이름
+     */
+    public String getReRankingModelName() {
+        return getProperty("reranking.model.name", "rerank-multilingual-v3.0");
+    }
+
+    /**
+     * ReRanking 초기 검색 결과 수
+     */
+    public int getReRankingInitialResults() {
+        return getIntProperty("reranking.initial.results", 20);
+    }
+
+    /**
+     * ReRanking 최종 결과 수
+     */
+    public int getReRankingFinalResults() {
+        return getIntProperty("reranking.final.results", 5);
+    }
+
+    /**
+     * ReRanking 최소 점수
+     */
+    public double getReRankingMinScore() {
+        return getDoubleProperty("reranking.min.score", 0.8);
     }
 }
