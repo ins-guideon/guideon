@@ -649,8 +649,4 @@ guideon-frontend/
 
 ## 📄 라이선스
 
-MIT License#   g u i d e o n 
- 
- #   g u i d e o n 
- 
- 
+MIT License

@@ -2,6 +2,10 @@ server:
   port: 8080
   servlet:
     context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
   error:
     include-message: always
     include-stacktrace: on_param
@@ -19,23 +23,41 @@ spring:
   mvc:
     throw-exception-if-no-handler-found: true
     static-path-pattern: /static/**
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 # Google Gemini API Configuration
 gemini:
   api:
-    key: ${GOOGLE_API_KEY}
+    key: ${GOOGLE_API_KEY:AIzaSyDON4b4pkFQqAhiEiB3e_KrHCjK9kq32Y0}
 
-# Embedding Configuration
+# Cohere API Configuration (for ReRanking)
+cohere:
+  api:
+    key: ${COHERE_API_KEY:VRpGzfhNYKLaqsAyGpMoDBRGKd72iu084h3H3Ayc}
+
+# Embedding Configuration (Google AI Gemini - 한국어 지원)
 embedding:
   model:
-    name: all-minilm-l6-v2
-  dimension: 384
+    name: text-embedding-004
+  dimension: 768
 
 # Vector Search Configuration
 vector:
   search:
     max-results: 5
     min-score: 0.5
+
+# ReRanking Configuration (Cohere)
+reranking:
+  enabled: true
+  model-name: rerank-multilingual-v3.0
+  initial-results: 20
+  final-results: 5
+  min-score: 0.8
 
 # RAG Configuration
 rag:
@@ -59,6 +81,9 @@ logging:
     dev.langchain4j: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  charset:
+    console: UTF-8
+    file: UTF-8
 
 # Regulation Types
 regulation:
