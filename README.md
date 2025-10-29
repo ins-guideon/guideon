@@ -1016,11 +1016,11 @@ Tokenizer → 품사 필터 → 불용어 제거 → 동의어 확장 → 길이
 
 ### 구현 계획
 
-**Phase 4.1 - 필수 (1주)**
-- [ ] 사용자 사전 구축 (규정 용어 100개)
-- [ ] 불용어 적용
-- [ ] EnhancedKoreanAnalyzer 구현
-- [ ] BM25SearchService 통합
+**Phase 4.1 - 필수 (완료!)**
+- [x] 사용자 사전 구축 (규정 용어 100개)
+- [x] 불용어 적용
+- [x] EnhancedKoreanAnalyzer 구현
+- [x] BM25SearchService 통합
 
 **Phase 4.2 - 권장 (완료!)**
 - [x] 동의어 사전 구축 (150+ 동의어 그룹)
