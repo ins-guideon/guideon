@@ -37,8 +37,8 @@ public class LuceneAnalyzerFactory {
      * @return 한국어 형태소 분석기
      */
     public static Analyzer createKoreanAnalyzer(KoreanTokenizer.DecompoundMode decompoundMode) {
-        logger.info("Creating Enhanced Korean Analyzer with mode: {}", decompoundMode);
-        return new EnhancedKoreanAnalyzer(null, null, decompoundMode);
+        logger.info("Creating Enhanced Korean Analyzer (Phase 4.2) with mode: {}", decompoundMode);
+        return new EnhancedKoreanAnalyzer(null, null, null, decompoundMode);
     }
 
     /**

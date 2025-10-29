@@ -1,7 +1,11 @@
 package com.guideon.analyzer;
 
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.ko.dict.UserDictionary;
+import org.apache.lucene.analysis.synonym.SolrSynonymParser;
+import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +24,7 @@ public class DictionaryLoader {
 
     private static final String USER_DICT_PATH = "korean-dictionary/user-dict.txt";
     private static final String STOPWORDS_PATH = "korean-dictionary/stopwords.txt";
+    private static final String SYNONYMS_PATH = "korean-dictionary/synonyms.txt";
 
     /**
      * 사용자 사전 로드
@@ -39,6 +44,35 @@ public class DictionaryLoader {
 
         } catch (IOException e) {
             logger.warn("Failed to load user dictionary, using default Nori dictionary", e);
+            return null;
+        }
+    }
+
+    /**
+     * 동의어 사전 로드 (Phase 4.2)
+     * 동의어 확장으로 검색 재현율 향상
+     *
+     * @return SynonymMap 동의어 맵, 실패 시 null
+     */
+    public static SynonymMap loadSynonyms() {
+        logger.info("Loading synonyms from: {}", SYNONYMS_PATH);
+
+        try (InputStream is = getResourceAsStream(SYNONYMS_PATH);
+             Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+             Analyzer analyzer = new WhitespaceAnalyzer()) {
+
+            // Solr 형식의 동의어 파서 사용
+            // dedup=true: 중복 동의어 제거, expand=true: 양방향 확장
+            // analyzer: WhitespaceAnalyzer 사용 (공백으로 토큰 분리)
+            SolrSynonymParser parser = new SolrSynonymParser(true, true, analyzer);
+            parser.parse(reader);
+
+            SynonymMap synonymMap = parser.build();
+            logger.info("✓ Synonym dictionary loaded successfully");
+            return synonymMap;
+
+        } catch (IOException | java.text.ParseException e) {
+            logger.info("Synonym dictionary not found or failed to load, synonyms disabled", e);
             return null;
         }
     }

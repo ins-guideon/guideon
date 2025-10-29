@@ -8,26 +8,30 @@ import org.apache.lucene.analysis.ko.dict.UserDictionary;
 import org.apache.lucene.analysis.ko.POS;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.miscellaneous.LengthFilter;
+import org.apache.lucene.analysis.synonym.SynonymGraphFilter;
+import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
 /**
- * Phase 4.1: 규정 검색에 최적화된 한국어 Analyzer
+ * Phase 4.1 + 4.2: 규정 검색에 최적화된 한국어 Analyzer
  *
  * 주요 기능:
- * 1. 사용자 사전 적용 (규정 용어)
- * 2. 품사 기반 불용어 제거 (조사, 어미)
- * 3. 일반 불용어 제거
- * 4. 한자 읽기 변환
- * 5. 토큰 길이 필터링
+ * 1. 사용자 사전 적용 (규정 용어) - Phase 4.1
+ * 2. 품사 기반 불용어 제거 (조사, 어미) - Phase 4.1
+ * 3. 일반 불용어 제거 - Phase 4.1
+ * 4. 한자 읽기 변환 - Phase 4.1
+ * 5. 동의어 확장 (Synonym expansion) - Phase 4.2
+ * 6. 토큰 길이 필터링
  */
 public class EnhancedKoreanAnalyzer extends Analyzer {
     private static final Logger logger = LoggerFactory.getLogger(EnhancedKoreanAnalyzer.class);
 
     private final UserDictionary userDictionary;
     private final CharArraySet stopWords;
+    private final SynonymMap synonymMap;  // Phase 4.2
     private final KoreanTokenizer.DecompoundMode decompoundMode;
 
     /**
@@ -37,6 +41,7 @@ public class EnhancedKoreanAnalyzer extends Analyzer {
         this(
             DictionaryLoader.loadUserDictionary(),
             DictionaryLoader.loadStopWords(),
+            DictionaryLoader.loadSynonyms(),  // Phase 4.2
             KoreanTokenizer.DecompoundMode.MIXED
         );
     }
@@ -46,20 +51,25 @@ public class EnhancedKoreanAnalyzer extends Analyzer {
      *
      * @param userDictionary 사용자 사전 (null 가능)
      * @param stopWords 불용어 집합 (null 가능)
+     * @param synonymMap 동의어 맵 (null 가능) - Phase 4.2
      * @param decompoundMode 복합어 분해 모드
      */
     public EnhancedKoreanAnalyzer(
             UserDictionary userDictionary,
             CharArraySet stopWords,
+            SynonymMap synonymMap,
             KoreanTokenizer.DecompoundMode decompoundMode) {
+        super();  // Lucene Analyzer 초기화
 
         this.userDictionary = userDictionary;
         this.stopWords = stopWords;
+        this.synonymMap = synonymMap;  // Phase 4.2
         this.decompoundMode = decompoundMode;
 
-        logger.info("EnhancedKoreanAnalyzer initialized:");
+        logger.info("EnhancedKoreanAnalyzer initialized (Phase 4.1 + 4.2):");
         logger.info("  - User Dictionary: {}", userDictionary != null ? "Loaded" : "Not loaded");
         logger.info("  - Stop Words: {} words", stopWords != null ? stopWords.size() : 0);
+        logger.info("  - Synonyms: {}", synonymMap != null ? "Enabled" : "Disabled");
         logger.info("  - Decompound Mode: {}", decompoundMode);
     }
 
@@ -94,7 +104,13 @@ public class EnhancedKoreanAnalyzer extends Analyzer {
         // 2.4 소문자 변환 (영문 처리용)
         stream = new LowerCaseFilter(stream);
 
-        // 2.5 너무 짧거나 긴 토큰 제거
+        // 2.5 동의어 확장 (Phase 4.2)
+        // 주의: SynonymGraphFilter는 소문자 변환 이후에 적용
+        if (synonymMap != null) {
+            stream = new SynonymGraphFilter(stream, synonymMap, true);
+        }
+
+        // 2.6 너무 짧거나 긴 토큰 제거
         // 최소 1글자, 최대 50글자
         stream = new LengthFilter(stream, 1, 50);
 

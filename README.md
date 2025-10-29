@@ -1022,11 +1022,12 @@ Tokenizer → 품사 필터 → 불용어 제거 → 동의어 확장 → 길이
 - [ ] EnhancedKoreanAnalyzer 구현
 - [ ] BM25SearchService 통합
 
-**Phase 4.2 - 권장 (1주)**
-- [ ] 동의어 사전 구축 (50개 그룹)
-- [ ] 복합명사 사전 확장 (200개)
-- [ ] 테스트 도구 개발
-- [ ] 성능 벤치마크
+**Phase 4.2 - 권장 (완료!)**
+- [x] 동의어 사전 구축 (150+ 동의어 그룹)
+- [x] 복합명사 사전 확장 (170+ 추가 복합명사)
+- [x] EnhancedKoreanAnalyzer에 동의어 확장 적용
+- [x] SearchQueryAnalyzer에 동의어 확장 적용
+- [x] WhitespaceAnalyzer 기반 동의어 파싱
 
 **Phase 4.3 - 선택 (1주)**
 - [ ] 조항 번호 특수 처리

@@ -1,66 +1,73 @@
-# Guideon 프로젝트 빌드 스크립트 (PowerShell)
-# Java 17을 사용하여 Maven 빌드 실행
-
-# UTF-8 콘솔 인코딩 설정
+# Guideon Build Script - Phase 4.2
+# UTF-8 Encoding Setup
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 chcp 65001 > $null
 
-Write-Host "=== Guideon 프로젝트 빌드 ===" -ForegroundColor Green
+Write-Host "=== Guideon Build ===" -ForegroundColor Green
+Write-Host "Phase 4.2: Korean Analyzer Advanced Features" -ForegroundColor Cyan
 Write-Host ""
 
-# Java 17 경로 설정
+# Java 17 Path
 $JAVA17_HOME = "C:\Program Files\Java\jdk-17"
 
-Write-Host "현재 JAVA_HOME 확인..." -ForegroundColor Yellow
-Write-Host "시스템 JAVA_HOME: $env:JAVA_HOME" -ForegroundColor Cyan
+Write-Host "Checking JAVA_HOME..." -ForegroundColor Yellow
+Write-Host "System JAVA_HOME: $env:JAVA_HOME" -ForegroundColor Cyan
 
-# Java 17 존재 확인
+# Check Java 17 exists
 if (Test-Path $JAVA17_HOME) {
-    Write-Host "✓ Java 17 발견: $JAVA17_HOME" -ForegroundColor Green
+    Write-Host "Java 17 found: $JAVA17_HOME" -ForegroundColor Green
 
-    # 현재 세션에 Java 17 설정
+    # Set Java 17 for current session
     $env:JAVA_HOME = $JAVA17_HOME
     $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 
-    Write-Host "✓ 현재 세션에 Java 17 설정 완료" -ForegroundColor Green
+    Write-Host "Java 17 configured for current session" -ForegroundColor Green
     Write-Host ""
 
-    # Maven 버전 확인
-    Write-Host "Maven 버전 확인:" -ForegroundColor Yellow
+    # Maven version check
+    Write-Host "Maven version:" -ForegroundColor Yellow
     mvn --version
     Write-Host ""
 
-    # 빌드 시작
-    Write-Host "빌드 시작..." -ForegroundColor Yellow
+    # Start build
+    Write-Host "Starting build..." -ForegroundColor Yellow
     Write-Host ""
 
-    # 빌드 실행
+    # Execute build
     mvn clean package -DskipTests
 
     $buildResult = $LASTEXITCODE
 
     Write-Host ""
     if ($buildResult -eq 0) {
-        Write-Host "=== 빌드 성공! ===" -ForegroundColor Green
+        Write-Host "=== Build Success! ===" -ForegroundColor Green
         Write-Host ""
-        Write-Host "생성된 파일: target\regulation-search-1.0.0.jar" -ForegroundColor Cyan
+        Write-Host "Generated file: target\regulation-search-1.0.0.jar" -ForegroundColor Cyan
         Write-Host ""
-        Write-Host "실행 방법:" -ForegroundColor Yellow
+        Write-Host "Phase 4.2 New Features:" -ForegroundColor Yellow
+        Write-Host "  - Synonym Dictionary (150+ synonym groups)" -ForegroundColor Green
+        Write-Host "  - Extended User Dictionary (170+ compound nouns)" -ForegroundColor Green
+        Write-Host "  - Synonym Expansion in Analyzers" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "How to run:" -ForegroundColor Yellow
         Write-Host "  java -jar target\regulation-search-1.0.0.jar" -ForegroundColor White
-        Write-Host "  또는" -ForegroundColor White
+        Write-Host "  or" -ForegroundColor White
         Write-Host "  mvn spring-boot:run" -ForegroundColor White
+        Write-Host ""
+        Write-Host "Note: Rebuild BM25 index by re-uploading documents" -ForegroundColor Cyan
+        Write-Host "      or run ReindexBM25Tool" -ForegroundColor Cyan
     } else {
-        Write-Host "=== 빌드 실패 ===" -ForegroundColor Red
-        Write-Host "위의 오류 메시지를 확인하세요." -ForegroundColor Red
+        Write-Host "=== Build Failed ===" -ForegroundColor Red
+        Write-Host "Check error messages above" -ForegroundColor Red
         exit $buildResult
     }
 } else {
-    Write-Host "✗ 오류: Java 17을 찾을 수 없습니다: $JAVA17_HOME" -ForegroundColor Red
+    Write-Host "Error: Java 17 not found at: $JAVA17_HOME" -ForegroundColor Red
     Write-Host ""
-    Write-Host "설치된 Java 버전들:" -ForegroundColor Yellow
+    Write-Host "Installed Java versions:" -ForegroundColor Yellow
     Get-ChildItem "C:\Program Files\Java" -ErrorAction SilentlyContinue | Select-Object Name
     Write-Host ""
-    Write-Host "Java 17을 설치하거나 JAVA17_HOME 변수를 수정하세요." -ForegroundColor Red
+    Write-Host "Please install Java 17 or modify JAVA17_HOME variable" -ForegroundColor Red
     exit 1
 }
