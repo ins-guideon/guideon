@@ -368,41 +368,61 @@ public class RegulationSearchService {
             var scoringResponse = scoringModel.scoreAll(segments, query);
             List<Double> scores = scoringResponse.content();
 
+            logger.info("Cohere ReRanking received {} scores for {} candidates", scores.size(), candidates.size());
+
+            // 모든 점수 로그 (디버깅용)
+            if (logger.isInfoEnabled() && !scores.isEmpty()) {
+                String allScoresStr = scores.stream()
+                        .map(s -> String.format("%.3f", s))
+                        .collect(Collectors.joining(", "));
+                logger.info("All ReRanking scores: [{}]", allScoresStr);
+            }
+
             // 점수와 매칭 결과를 조합
             List<EmbeddingMatch<TextSegment>> reRankedResults = new ArrayList<>();
+            int filteredCount = 0;
+
             for (int i = 0; i < candidates.size() && i < scores.size(); i++) {
                 double reRankScore = scores.get(i);
+                EmbeddingMatch<TextSegment> original = candidates.get(i);
 
-                // ReRanking 최소 점수 필터링
-                if (reRankScore >= reRankingMinScore) {
-                    EmbeddingMatch<TextSegment> original = candidates.get(i);
-                    // 새로운 점수로 EmbeddingMatch 재생성
-                    EmbeddingMatch<TextSegment> reRanked = new EmbeddingMatch<>(
-                            reRankScore,
-                            original.embeddingId(),
-                            original.embedding(),
-                            original.embedded()
-                    );
-                    reRankedResults.add(reRanked);
+                // 새로운 점수로 EmbeddingMatch 재생성
+                EmbeddingMatch<TextSegment> reRanked = new EmbeddingMatch<>(
+                        reRankScore,
+                        original.embeddingId(),
+                        original.embedding(),
+                        original.embedded()
+                );
+                reRankedResults.add(reRanked);
+
+                // 최소 점수 미만인 경우 카운트
+                if (reRankScore < reRankingMinScore) {
+                    filteredCount++;
                 }
+            }
+
+            if (filteredCount > 0) {
+                logger.warn("ReRanking: {} out of {} results have score < {} (threshold too high?)",
+                        filteredCount, reRankedResults.size(), reRankingMinScore);
             }
 
             // 점수 기준 내림차순 정렬
             reRankedResults.sort((a, b) -> Double.compare(b.score(), a.score()));
 
-            // 최종 결과 수로 제한
-            if (reRankedResults.size() > reRankingFinalResults) {
-                reRankedResults = reRankedResults.subList(0, reRankingFinalResults);
+            // 최종 결과 수로 제한 (점수 필터링 없이 상위 N개만 선택)
+            int finalCount = Math.min(reRankingFinalResults, reRankedResults.size());
+            if (reRankedResults.size() > finalCount) {
+                reRankedResults = reRankedResults.subList(0, finalCount);
             }
 
-            logger.debug("ReRanking completed: {} -> {} results (minScore: {})",
-                    candidates.size(), reRankedResults.size(), reRankingMinScore);
+            logger.info("ReRanking completed: {} candidates -> {} final results",
+                    candidates.size(), reRankedResults.size());
 
-            if (logger.isDebugEnabled() && !reRankedResults.isEmpty()) {
-                String scoresStr = reRankedResults.stream()
+            if (logger.isInfoEnabled() && !reRankedResults.isEmpty()) {
+                String topScoresStr = reRankedResults.stream()
                         .map(r -> String.format("%.3f", r.score()))
                         .collect(Collectors.joining(", "));
-                logger.debug("ReRanked scores: [{}]", scoresStr);
+                logger.info("Top ReRanked scores: [{}]", topScoresStr);
             }
 
             return reRankedResults;
