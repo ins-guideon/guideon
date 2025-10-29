@@ -1,0 +1,244 @@
+/* Markdown Answer Styles */
+.markdown-answer {
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+/* 제목 스타일 */
+.markdown-answer h1,
+.markdown-answer h2,
+.markdown-answer h3,
+.markdown-answer h4 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.markdown-answer h1 {
+  font-size: 28px;
+  border-bottom: 2px solid #e8e8e8;
+  padding-bottom: 12px;
+}
+
+.markdown-answer h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.markdown-answer h3 {
+  font-size: 20px;
+  color: #1890ff;
+}
+
+.markdown-answer h4 {
+  font-size: 16px;
+  color: #595959;
+}
+
+/* 단락 스타일 */
+.markdown-answer p {
+  margin-bottom: 16px;
+  line-height: 1.8;
+}
+
+/* 강조 텍스트 */
+.markdown-answer strong {
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.markdown-answer em {
+  font-style: italic;
+  color: #595959;
+}
+
+/* 리스트 스타일 */
+.markdown-answer ul,
+.markdown-answer ol {
+  margin: 16px 0;
+  padding-left: 28px;
+}
+
+.markdown-answer li {
+  margin: 8px 0;
+  line-height: 1.8;
+}
+
+.markdown-answer ul li {
+  list-style-type: disc;
+}
+
+.markdown-answer ol li {
+  list-style-type: decimal;
+}
+
+.markdown-answer li strong {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+/* 인용구 스타일 */
+.markdown-answer blockquote {
+  margin: 20px 0;
+  padding: 16px 20px;
+  border-left: 4px solid #1890ff;
+  background-color: #f6f8fa;
+  border-radius: 4px;
+}
+
+.markdown-answer blockquote p {
+  margin: 0;
+  color: #595959;
+}
+
+.markdown-answer blockquote strong {
+  color: #1890ff;
+}
+
+/* 수평선 */
+.markdown-answer hr {
+  margin: 24px 0;
+  border: none;
+  border-top: 1px solid #e8e8e8;
+}
+
+/* 코드 블록 */
+.markdown-answer code {
+  padding: 2px 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  color: #d6336c;
+}
+
+.markdown-answer pre {
+  margin: 16px 0;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown-answer pre code {
+  padding: 0;
+  background-color: transparent;
+  color: #262626;
+}
+
+/* 테이블 스타일 */
+.markdown-answer table {
+  width: 100%;
+  margin: 20px 0;
+  border-collapse: collapse;
+  border: 1px solid #e8e8e8;
+}
+
+.markdown-answer th {
+  padding: 12px 16px;
+  background-color: #fafafa;
+  border: 1px solid #e8e8e8;
+  font-weight: 600;
+  text-align: left;
+}
+
+.markdown-answer td {
+  padding: 12px 16px;
+  border: 1px solid #e8e8e8;
+}
+
+.markdown-answer tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* 링크 스타일 */
+.markdown-answer a {
+  color: #1890ff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.markdown-answer a:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+/* 이모지 크기 조정 */
+.markdown-answer img.emoji {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+
+/* 특수 강조: 숫자와 단위 */
+.markdown-answer strong:has-text('[0-9]') {
+  color: #fa541c;
+  font-weight: 600;
+}
+
+/* 참조 조항 섹션 강조 */
+.markdown-answer h3:has-text('참조 조항') {
+  color: #52c41a;
+  margin-top: 32px;
+}
+
+/* 추가 안내 인용구 특별 스타일 */
+.markdown-answer blockquote:has(strong:has-text('추가 안내')) {
+  background: linear-gradient(135deg, #e6f7ff 0%, #f0f5ff 100%);
+  border-left-color: #1890ff;
+  border-left-width: 4px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .markdown-answer {
+    font-size: 14px;
+  }
+
+  .markdown-answer h1 {
+    font-size: 24px;
+  }
+
+  .markdown-answer h2 {
+    font-size: 20px;
+  }
+
+  .markdown-answer h3 {
+    font-size: 18px;
+  }
+
+  .markdown-answer ul,
+  .markdown-answer ol {
+    padding-left: 20px;
+  }
+
+  .markdown-answer table {
+    font-size: 13px;
+  }
+
+  .markdown-answer th,
+  .markdown-answer td {
+    padding: 8px 12px;
+  }
+}
+
+/* 프린트 스타일 */
+@media print {
+  .markdown-answer {
+    color: #000;
+  }
+
+  .markdown-answer a {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .markdown-answer blockquote {
+    background-color: #fff;
+    border-left-color: #000;
+  }
+}

@@ -132,35 +132,66 @@ public class AnswerQualityEnhancer {
     }
 
     /**
-     * 답변 후처리 및 포맷팅
+     * 답변 후처리 및 Markdown 포맷팅
      */
     public static String enhanceAnswer(String rawAnswer, QueryAnalysisResult analysis, List<String> extractedArticles) {
-        logger.debug("Enhancing answer...");
+        logger.debug("Enhancing answer with Markdown formatting...");
 
         StringBuilder enhanced = new StringBuilder();
 
-        // 1. 답변 내용 정리
+        // 1. 답변 내용 정리 및 Markdown 변환
         String cleanedAnswer = cleanAnswer(rawAnswer);
-        enhanced.append(cleanedAnswer);
+        String markdownAnswer = convertToMarkdown(cleanedAnswer);
+        enhanced.append(markdownAnswer);
 
-        // 2. 의도별 후처리
-        if (analysis != null) {
-            String intentEnhancement = addIntentBasedEnhancement(cleanedAnswer, analysis.getIntent());
-            if (!intentEnhancement.isEmpty()) {
-                enhanced.append("\n\n").append(intentEnhancement);
+        // 2. 참조 조항 섹션 추가 (Markdown 형식)
+        if (extractedArticles != null && !extractedArticles.isEmpty()) {
+            enhanced.append("\n\n---\n\n");
+            enhanced.append("### 📋 참조 조항\n\n");
+            for (String article : extractedArticles) {
+                enhanced.append("- **").append(article).append("**\n");
             }
         }
 
-        // 3. 참조 조항 요약 추가
-        if (extractedArticles != null && !extractedArticles.isEmpty()) {
-            enhanced.append("\n\n📋 참조 조항: ");
-            enhanced.append(String.join(", ", extractedArticles));
+        // 3. 의도별 추가 정보 (Markdown 인용구 형식)
+        if (analysis != null) {
+            String intentEnhancement = addIntentBasedEnhancement(cleanedAnswer, analysis.getIntent());
+            if (!intentEnhancement.isEmpty()) {
+                enhanced.append("\n\n---\n\n");
+                enhanced.append("> 💡 **추가 안내**\n");
+                enhanced.append("> \n");
+                enhanced.append("> ").append(intentEnhancement);
+            }
         }
 
         String result = enhanced.toString();
-        logger.info("Answer enhanced: original length={}, enhanced length={}", rawAnswer.length(), result.length());
+        logger.info("Answer enhanced with Markdown: original length={}, enhanced length={}", rawAnswer.length(), result.length());
 
         return result;
+    }
+
+    /**
+     * 답변을 Markdown 형식으로 변환
+     */
+    private static String convertToMarkdown(String answer) {
+        String markdown = answer;
+
+        // 1. 번호 매김 리스트 개선
+        markdown = markdown.replaceAll("(?m)^(\\d+)\\.", "**$1.**");
+
+        // 2. 조항 참조를 굵게 표시
+        markdown = markdown.replaceAll("(제\\s*\\d+\\s*조)", "**$1**");
+
+        // 3. 규정 유형을 굵게 표시 (예: "취업규칙", "근태관리규정" 등)
+        markdown = markdown.replaceAll("(취업규칙|근태관리규정|복리후생비규정|출장여비규정|급여규정)(\\s+제)", "**$1**$2");
+
+        // 4. "단," 또는 "다만," 으로 시작하는 예외사항을 강조
+        markdown = markdown.replaceAll("(?m)^(단,|다만,)", "> **$1**");
+
+        // 5. 금액이나 숫자를 강조 (예: 15일, 20만원)
+        markdown = markdown.replaceAll("(\\d+(?:,\\d{3})*(?:일|개월|년|원|%|시간))", "**$1**");
+
+        return markdown;
     }
 
     /**

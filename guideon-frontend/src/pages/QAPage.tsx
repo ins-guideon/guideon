@@ -19,8 +19,11 @@ import {
   CopyOutlined,
 } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { regulationService } from '@/services/regulationService';
 import type { RegulationSearchResult } from '@/types';
+import '@/styles/markdown.css';
 
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
@@ -55,7 +58,7 @@ export const QAPage = () => {
     }
   };
 
-  const handleRating = async (rating: 'helpful' | 'not_helpful') => {
+  const handleRating = async (_rating: 'helpful' | 'not_helpful') => {
     try {
       // 답변 평가 API 호출 (historyId 필요)
       message.success('피드백이 저장되었습니다.');
@@ -196,9 +199,11 @@ export const QAPage = () => {
               />
             )}
 
-            <Paragraph style={{ fontSize: 15, lineHeight: 1.8, marginBottom: 24 }}>
-              {result.answer}
-            </Paragraph>
+            <div className="markdown-answer" style={{ fontSize: 15, lineHeight: 1.8, marginBottom: 24 }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {result.answer}
+              </ReactMarkdown>
+            </div>
 
             <Divider style={{ margin: '24px 0' }} />
 
