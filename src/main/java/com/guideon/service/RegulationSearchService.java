@@ -438,90 +438,61 @@ public class RegulationSearchService {
     }
 
     /**
-     * RAG 기반 답변 생성 (구조화된 컨텍스트 사용)
+     * RAG 기반 답변 생성 (구조화된 컨텍스트 사용 + 품질 개선)
      */
     private String generateAnswer(
             String question,
             List<EmbeddingMatch<TextSegment>> segments,
             QueryAnalysisResult analysis) {
 
-        // 구조화된 컨텍스트 생성
-        String context = EnhancedContextBuilder.buildStructuredContext(segments, analysis);
+        logger.info("========================================");
+        logger.info("Generating Answer with Quality Enhancement");
+        logger.info("========================================");
 
+        // 1. 구조화된 컨텍스트 생성
+        String context = EnhancedContextBuilder.buildStructuredContext(segments, analysis);
         logger.debug("Generated structured context (length: {} chars)", context.length());
 
-        // 질문 의도에 따른 맞춤형 프롬프트
-        String prompt = buildPromptByIntent(question, context, analysis.getIntent());
+        // 2. 의도별 최적화된 프롬프트 생성
+        String prompt = com.guideon.util.PromptTemplate.buildPrompt(question, context, analysis);
+        logger.debug("Prompt built with intent-specific guidelines");
 
+        // 3. LLM으로 답변 생성
         logger.debug("Generating answer with LLM...");
-        String answer = chatModel.generate(prompt);
+        String rawAnswer = chatModel.generate(prompt);
+        logger.info("Raw answer generated (length: {} chars)", rawAnswer.length());
 
-        logger.info("Answer generated successfully (length: {} chars)", answer.length());
-        return answer;
-    }
+        // 4. 답변 검증
+        boolean isValid = com.guideon.util.AnswerQualityEnhancer.validateAnswer(rawAnswer);
+        if (!isValid) {
+            logger.warn("Answer validation failed, but continuing with quality enhancement");
+        }
 
-    /**
-     * 질문 의도에 따른 프롬프트 생성
-     */
-    private String buildPromptByIntent(String question, String context, String intent) {
-        // 기본 지침
-        String baseInstructions = """
-            1. 제공된 규정 내용만을 기반으로 답변하세요
-            2. 명확하고 간결하게 작성하세요
-            3. 규정에 없는 내용은 추측하지 마세요
-            4. 불확실한 경우 "해당 규정에서 명확히 언급되지 않았습니다"라고 답변하세요
-            """;
+        // 5. 답변 품질 점수 계산
+        double qualityScore = com.guideon.util.AnswerQualityEnhancer.calculateAnswerQualityScore(rawAnswer, analysis);
+        logger.info("Answer quality score: {:.3f}", qualityScore);
 
-        // 의도별 추가 지침
-        String intentSpecificInstructions = switch (intent != null ? intent : "일반질문") {
-            case "기준확인" -> """
-                5. 구체적인 숫자, 금액, 기간 등을 명확히 제시하세요
-                6. 해당하는 규정 조항(제XX조)을 반드시 언급하세요
-                7. 조건이나 예외사항이 있다면 함께 설명하세요
-                """;
+        // 6. 참조 조항 추출
+        List<String> referencedArticles = com.guideon.util.AnswerQualityEnhancer.extractReferencedArticles(rawAnswer);
+        logger.info("Extracted {} article references from answer", referencedArticles.size());
 
-            case "절차설명" -> """
-                5. 절차를 단계별로 순서대로 설명하세요
-                6. 각 단계의 담당자나 부서를 언급하세요
-                7. 필요한 서류나 준비사항을 명시하세요
-                """;
+        // 7. 답변 개선 (후처리 및 포맷팅)
+        String enhancedAnswer = com.guideon.util.AnswerQualityEnhancer.enhanceAnswer(rawAnswer, analysis, referencedArticles);
+        logger.info("Answer enhanced (final length: {} chars)", enhancedAnswer.length());
 
-            case "가능여부" -> """
-                5. 먼저 가능/불가능 여부를 명확히 답변하세요
-                6. 그 근거가 되는 규정 조항을 제시하세요
-                7. 조건부 가능한 경우 그 조건을 상세히 설명하세요
-                """;
+        // 8. 신뢰도 기반 안내 메시지 추가
+        double confidenceScore = calculateConfidenceScore(segments);
+        String finalAnswer = com.guideon.util.AnswerQualityEnhancer.addConfidenceIndicator(enhancedAnswer, confidenceScore);
 
-            case "예외상황" -> """
-                5. 일반 원칙과 예외 상황을 구분하여 설명하세요
-                6. 예외가 적용되는 조건을 명확히 하세요
-                7. 승인이 필요한 경우 그 절차를 안내하세요
-                """;
+        logger.info("========================================");
+        logger.info("Answer Generation Complete");
+        logger.info("  Quality Score: {:.3f}", qualityScore);
+        logger.info("  Confidence Score: {:.3f}", confidenceScore);
+        logger.info("  Article References: {}", referencedArticles.size());
+        logger.info("  Final Length: {} chars", finalAnswer.length());
+        logger.info("========================================");
 
-            default -> """
-                5. 질문에 직접적으로 답변하세요
-                6. 관련 규정 조항이 있다면 언급하세요
-                """;
-        };
-
-        return String.format("""
-            당신은 회사 규정 전문가입니다. 다음 규정 내용을 참고하여 사용자의 질문에 정확하게 답변해주세요.
-
-            %s
-
-            [질문]
-            %s
-
-            [답변 작성 지침]
-            %s%s
-
-            [답변 형식]
-            - 핵심 답변을 먼저 제시하고, 상세 설명을 덧붙이세요
-            - 규정 조항을 인용할 때는 "취업규칙 제32조에 따르면..." 형식을 사용하세요
-            - 답변은 한국어로 자연스럽고 이해하기 쉽게 작성하세요
-
-            답변:
-            """, context, question, baseInstructions, intentSpecificInstructions);
+        return finalAnswer;
     }
 
     /**
