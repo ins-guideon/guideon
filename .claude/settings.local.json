@@ -45,7 +45,13 @@
       "Bash(powershell.exe:*)",
       "Bash(timeout:*)",
       "Bash(cmd.exe /c \"set JAVA_HOME=C:\\Program Files\\Java\\jdk-17&& set PATH=%JAVA_HOME%\\bin;%PATH%&& mvn clean package -DskipTests 2>&1\")",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(cmd.exe /c \"set JAVA_HOME=C:\\Program Files\\Java\\jdk-17&& set PATH=%JAVA_HOME%\\bin;%PATH%&& mvn exec:java -Dexec.mainClass=com.guideon.tool.AnalyzerTestTool\":*)",
+      "Bash(cmd.exe /c \"set JAVA_HOME=C:\\Program Files\\Java\\jdk-17&& set PATH=%JAVA_HOME%\\bin;%PATH%&& mvn clean\")",
+      "Bash(cmd.exe /c \"\"\"C:\\Program Files\\Java\\jdk-17\\bin\\java\"\" -cp target\\regulation-search-1.0.0.jar com.guideon.tool.AnalyzerTestTool 2>&1 | head -100\")",
+      "Bash(cmd.exe /c \"set JAVA_HOME=C:\\Program Files\\Java\\jdk-17&& set PATH=%JAVA_HOME%\\bin;%PATH%&& cd c:\\workspace2\\guideon&& java -cp target\\regulation-search-1.0.0.jar com.guideon.tool.ReindexBM25Tool\")",
+      "Bash(cmd.exe /c \"set JAVA_HOME=C:\\Program Files\\Java\\jdk-17&& set PATH=%JAVA_HOME%\\bin;%PATH%&& mvn exec:java -Dexec.mainClass=com.guideon.tool.ReindexBM25Tool 2>&1\":*)",
+      "Bash(cmd.exe:*)"
     ],
     "deny": [],
     "ask": []

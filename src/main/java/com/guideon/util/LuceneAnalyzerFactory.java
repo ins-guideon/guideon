@@ -1,10 +1,13 @@
 package com.guideon.util;
 
+import com.guideon.analyzer.EnhancedKoreanAnalyzer;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.ko.KoreanAnalyzer;
 import org.apache.lucene.analysis.ko.KoreanTokenizer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,14 +17,17 @@ import java.util.List;
  * 한국어 Nori Analyzer 생성 및 설정
  */
 public class LuceneAnalyzerFactory {
+    private static final Logger logger = LoggerFactory.getLogger(LuceneAnalyzerFactory.class);
 
     /**
      * 한국어 Nori Analyzer 생성 (기본 설정)
+     * Phase 4.1: EnhancedKoreanAnalyzer 사용
      *
      * @return 한국어 형태소 분석기
      */
     public static Analyzer createKoreanAnalyzer() {
-        return createKoreanAnalyzer(KoreanTokenizer.DecompoundMode.MIXED);
+        logger.info("Creating Enhanced Korean Analyzer (Phase 4.1)");
+        return new EnhancedKoreanAnalyzer();
     }
 
     /**
@@ -31,9 +37,31 @@ public class LuceneAnalyzerFactory {
      * @return 한국어 형태소 분석기
      */
     public static Analyzer createKoreanAnalyzer(KoreanTokenizer.DecompoundMode decompoundMode) {
-        // Lucene 9.x KoreanAnalyzer() 기본 생성자 사용
-        // 커스터마이징이 필요하면 별도 Analyzer를 직접 구성해야 함
+        logger.info("Creating Enhanced Korean Analyzer with mode: {}", decompoundMode);
+        return new EnhancedKoreanAnalyzer(null, null, decompoundMode);
+    }
+
+    /**
+     * 레거시 기본 한국어 Analyzer (Phase 4 이전 버전)
+     * 테스트 및 비교용
+     *
+     * @return 기본 KoreanAnalyzer
+     */
+    @Deprecated
+    public static Analyzer createBasicKoreanAnalyzer() {
+        logger.warn("Using basic KoreanAnalyzer (deprecated, use createKoreanAnalyzer instead)");
         return new KoreanAnalyzer();
+    }
+
+    /**
+     * 검색 쿼리 전용 Analyzer 생성 (Phase 4.1)
+     * 최소 필터링으로 검색 재현율 향상
+     *
+     * @return SearchQueryAnalyzer
+     */
+    public static Analyzer createSearchQueryAnalyzer() {
+        logger.info("Creating Search Query Analyzer (Phase 4.1 - minimal filtering)");
+        return new com.guideon.analyzer.SearchQueryAnalyzer();
     }
 
     /**

@@ -32,7 +32,8 @@ public class BM25SearchService {
     private static final Logger logger = LoggerFactory.getLogger(BM25SearchService.class);
 
     private final Directory directory;
-    private final Analyzer analyzer;
+    private final Analyzer indexingAnalyzer;  // 인덱싱용
+    private final Analyzer searchAnalyzer;    // 검색용
     private IndexWriter indexWriter;
     private DirectoryReader indexReader;
     private IndexSearcher indexSearcher;
@@ -54,19 +55,25 @@ public class BM25SearchService {
         Files.createDirectories(path);
 
         this.directory = FSDirectory.open(path);
-        this.analyzer = LuceneAnalyzerFactory.createKoreanAnalyzer();
+
+        // Phase 4.1: 인덱싱과 검색에 서로 다른 Analyzer 사용
+        this.indexingAnalyzer = LuceneAnalyzerFactory.createKoreanAnalyzer();  // 강력한 필터링 (불용어 제거)
+        this.searchAnalyzer = LuceneAnalyzerFactory.createSearchQueryAnalyzer(); // 완화된 필터링 (재현율 향상)
 
         // IndexWriter 초기화
         initializeIndexWriter();
 
         logger.info("BM25SearchService initialized: path={}, k1={}, b={}", indexPath, k1, b);
+        logger.info("  - Indexing Analyzer: EnhancedKoreanAnalyzer (with stopwords)");
+        logger.info("  - Search Analyzer: SearchQueryAnalyzer (minimal filtering)");
     }
 
     /**
      * IndexWriter 초기화
      */
     private void initializeIndexWriter() throws IOException {
-        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        // 인덱싱에는 indexingAnalyzer 사용 (강력한 필터링)
+        IndexWriterConfig config = new IndexWriterConfig(indexingAnalyzer);
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
         config.setSimilarity(new BM25Similarity(k1, b));
         config.setRAMBufferSizeMB(256);
@@ -110,8 +117,8 @@ public class BM25SearchService {
         // IndexReader 갱신
         refreshIndexReader();
 
-        // QueryParser로 쿼리 파싱
-        QueryParser parser = new QueryParser("content", analyzer);
+        // QueryParser로 쿼리 파싱 (검색에는 searchAnalyzer 사용 - 완화된 필터링)
+        QueryParser parser = new QueryParser("content", searchAnalyzer);
         Query luceneQuery = parser.parse(query);
 
         // 검색 수행
