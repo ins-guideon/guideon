@@ -1,6 +1,7 @@
 package com.guideon.service;
 
 import com.guideon.config.ConfigLoader;
+import com.guideon.config.RegulationInferenceConfigLoader;
 import com.guideon.model.QueryAnalysisResult;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
@@ -96,7 +97,7 @@ public class QueryAnalysisService {
     }
 
     /**
-     * AI 분석을 위한 프롬프트 생성
+     * AI 분석을 위한 프롬프트 생성 (개선된 버전)
      */
     private String buildAnalysisPrompt(String userQuery) {
         return String.format("""
@@ -110,9 +111,17 @@ public class QueryAnalysisService {
             REGULATION_TYPES: [관련될 것으로 예상되는 규정 유형, 다음 목록에서 선택]
             %s
             INTENT: [질문 의도: 정보조회/절차안내/기준확인/자격요건/예외사항 중 하나]
-            SEARCH_QUERY: [검색에 최적화된 쿼리문]
+            SEARCH_QUERY: [검색에 최적화된 쿼리문 - 조사/어미 제거, 핵심 명사만 추출]
 
-            규정 유형은 위 목록에서만 선택하고, 관련 없으면 "일반"으로 표시하세요.
+            중요 규칙:
+            1. 규정 유형은 위 목록에서만 선택하고, 관련 없으면 "일반"으로 표시하세요.
+            2. 경조사/경조휴가/경조금 관련 질문은 "복리후생비규정"과 "취업규칙"을 포함하세요.
+            3. SEARCH_QUERY는 "~에 대한", "~를 알려줘" 등을 제거하고 핵심 키워드만 포함하세요.
+
+            예시:
+            - 질문: "경조사에 대한 규정을 알려줘"
+            - SEARCH_QUERY: "경조사 경조휴가 경조금"
+            - REGULATION_TYPES: 복리후생비규정, 취업규칙
             """, userQuery, String.join(", ", regulationTypes));
     }
 
@@ -202,7 +211,7 @@ public class QueryAnalysisService {
     }
 
     /**
-     * AI 분석 실패 시 폴백 분석
+     * AI 분석 실패 시 폴백 분석 (개선된 버전)
      */
     private QueryAnalysisResult createFallbackAnalysis(String userQuery) {
         logger.warn("Using fallback analysis for query: {}", userQuery);
@@ -221,11 +230,55 @@ public class QueryAnalysisService {
                 matchedTypes.add(regType);
             }
         }
+
+        // 특정 키워드에 대한 규정 유형 추론
+        if (matchedTypes.isEmpty()) {
+            matchedTypes = inferRegulationTypes(userQuery);
+        }
+
         result.setRegulationTypes(matchedTypes.isEmpty() ? List.of("일반") : matchedTypes);
 
         result.setIntent("정보조회");
-        result.setSearchQuery(userQuery);
+
+        // 검색 쿼리 최적화
+        String optimizedQuery = optimizeSearchQuery(userQuery);
+        result.setSearchQuery(optimizedQuery);
+
+        logger.info("Fallback analysis: regulationTypes={}, searchQuery={}",
+                matchedTypes, optimizedQuery);
 
         return result;
+    }
+
+    /**
+     * 쿼리 내용으로부터 관련 규정 유형 추론 (설정 기반)
+     */
+    private List<String> inferRegulationTypes(String query) {
+        // 설정 파일 기반 추론 사용
+        List<String> inferred = RegulationInferenceConfigLoader.inferRegulationTypes(query);
+
+        logger.debug("Inferred regulation types for '{}': {}", query, inferred);
+        return inferred;
+    }
+
+    /**
+     * 검색 쿼리 최적화 (불필요한 조사/어미 제거)
+     */
+    private String optimizeSearchQuery(String query) {
+        // "~에 대한", "~를 알려줘" 등 패턴 제거
+        String optimized = query
+                .replaceAll("에\\s+대한\\s+", " ")
+                .replaceAll("를\\s+알려줘", "")
+                .replaceAll("을\\s+알려줘", "")
+                .replaceAll("를\\s+알려주세요", "")
+                .replaceAll("을\\s+알려주세요", "")
+                .replaceAll("가\\s+어떻게\\s+되나요", "")
+                .replaceAll("는\\s+얼마인가요", "")
+                .replaceAll("\\?", "")
+                .trim()
+                .replaceAll("\\s+", " ");
+
+        logger.debug("Optimized query: '{}' -> '{}'", query, optimized);
+        return optimized;
     }
 }

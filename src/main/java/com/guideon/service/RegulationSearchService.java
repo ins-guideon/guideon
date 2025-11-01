@@ -526,20 +526,210 @@ public class RegulationSearchService {
     }
 
     /**
-     * 신뢰도 점수 계산
+     * 신뢰도 점수 계산 (개선된 알고리즘)
+     *
+     * 다양한 요소를 고려하여 신뢰도를 계산:
+     * 1. 검색 방식별 점수 정규화 (ReRanking, RRF, Vector Search)
+     * 2. 상위 결과 가중치 적용
+     * 3. 점수 분포 일관성 평가
+     * 4. 결과 개수 기반 신뢰도 조정
      */
     private double calculateConfidenceScore(List<EmbeddingMatch<TextSegment>> matches) {
         if (matches.isEmpty()) {
             return 0.0;
         }
 
-        // 상위 매치들의 평균 점수
-        double avgScore = matches.stream()
-                .mapToDouble(EmbeddingMatch::score)
-                .average()
-                .orElse(0.0);
+        // 검색 방식 감지 및 점수 정규화
+        double normalizedScore;
 
-        return avgScore;
+        if (reRankingEnabled && scoringModel != null) {
+            // Case 1: ReRanking 점수 (0.0~1.0, 실제로는 0.001~0.3)
+            // Cohere ReRanking은 매우 낮은 점수를 반환하므로 정규화 필요
+            normalizedScore = normalizeReRankingScores(matches);
+            logger.debug("Confidence calculation: ReRanking mode, normalized score={}", normalizedScore);
+
+        } else if (hybridSearchEnabled && hybridSearchService != null) {
+            // Case 2: Hybrid Search (RRF 점수, 0.01~0.03)
+            // RRF 점수는 매우 낮으므로 순위 기반으로 재계산
+            normalizedScore = normalizeRRFScores(matches);
+            logger.debug("Confidence calculation: Hybrid Search mode, normalized score={}", normalizedScore);
+
+        } else {
+            // Case 3: 순수 Vector Search (코사인 유사도, 0.5~0.99)
+            normalizedScore = normalizeVectorSearchScores(matches);
+            logger.debug("Confidence calculation: Vector Search mode, normalized score={}", normalizedScore);
+        }
+
+        // 결과 개수 기반 신뢰도 조정 (너무 적으면 패널티)
+        double countFactor = calculateCountFactor(matches.size());
+
+        // 점수 분포 일관성 평가 (점수가 고르면 더 신뢰)
+        double consistencyFactor = calculateConsistencyFactor(matches);
+
+        // 최종 신뢰도 = 정규화된 점수 × 개수 팩터 × 일관성 팩터
+        double finalConfidence = normalizedScore * countFactor * consistencyFactor;
+
+        // 0.0~1.0 범위로 제한
+        finalConfidence = Math.max(0.0, Math.min(1.0, finalConfidence));
+
+        logger.info("Confidence score calculated: {} (normalized={}, count_factor={}, consistency_factor={})",
+                String.format("%.3f", finalConfidence),
+                String.format("%.3f", normalizedScore),
+                String.format("%.3f", countFactor),
+                String.format("%.3f", consistencyFactor));
+
+        return finalConfidence;
+    }
+
+    /**
+     * ReRanking 점수 정규화
+     * Cohere는 0.001~0.3 범위의 낮은 점수를 반환하므로 정규화 필요
+     */
+    private double normalizeReRankingScores(List<EmbeddingMatch<TextSegment>> matches) {
+        // 상위 3개 결과의 가중 평균 사용
+        double weightedSum = 0.0;
+        double weightSum = 0.0;
+
+        int topK = Math.min(3, matches.size());
+        for (int i = 0; i < topK; i++) {
+            double weight = 1.0 / (i + 1); // 1.0, 0.5, 0.33...
+            double score = matches.get(i).score();
+
+            // ReRanking 점수를 0~1 범위로 매핑 (더 관대하게 조정)
+            // Cohere ReRanking은 절대값이 낮지만 상대적 순위가 중요함
+            double normalizedScore;
+            if (score >= 0.2) {
+                normalizedScore = 0.85 + (score - 0.2) * 0.75; // 0.85~1.0 (0.2+ 매우 높음)
+            } else if (score >= 0.08) {
+                normalizedScore = 0.70 + (score - 0.08) * 1.25; // 0.70~0.85 (0.08~0.2 높음)
+            } else if (score >= 0.03) {
+                normalizedScore = 0.55 + (score - 0.03) * 3.0; // 0.55~0.70 (0.03~0.08 중간)
+            } else if (score >= 0.01) {
+                normalizedScore = 0.40 + (score - 0.01) * 7.5; // 0.40~0.55 (0.01~0.03 낮음)
+            } else {
+                normalizedScore = Math.max(0.25, score * 40.0); // 0.25~0.40 (최소 0.25 보장)
+            }
+
+            weightedSum += normalizedScore * weight;
+            weightSum += weight;
+        }
+
+        return weightSum > 0 ? weightedSum / weightSum : 0.0;
+    }
+
+    /**
+     * RRF 점수 정규화 (Hybrid Search)
+     * RRF 점수는 순위 기반이므로 점수 자체보다 순위를 활용
+     */
+    private double normalizeRRFScores(List<EmbeddingMatch<TextSegment>> matches) {
+        // RRF 점수는 매우 낮으므로 (0.01~0.03), 순위 기반으로 신뢰도 계산
+        if (matches.isEmpty()) return 0.0;
+
+        // 최상위 결과의 점수가 높으면 신뢰도 높음
+        double topScore = matches.get(0).score();
+
+        // RRF 점수 범위: 0.016 (1위) ~ 0.003 (마지막)
+        // Phase 4.2: BM25 가중치가 높아져서 RRF 신뢰도를 더 관대하게 평가
+        if (topScore >= 0.013) {
+            return 0.85 + Math.min(0.15, (topScore - 0.013) * 20.0); // 0.85~1.0 (최고)
+        } else if (topScore >= 0.008) {
+            return 0.70 + (topScore - 0.008) * 30.0; // 0.70~0.85 (높음)
+        } else if (topScore >= 0.004) {
+            return 0.55 + (topScore - 0.004) * 37.5; // 0.55~0.70 (중간)
+        } else {
+            return Math.max(0.40, 0.35 + topScore * 50.0); // 0.40~0.55 (최소 0.40 보장)
+        }
+    }
+
+    /**
+     * Vector Search 점수 정규화 (코사인 유사도)
+     */
+    private double normalizeVectorSearchScores(List<EmbeddingMatch<TextSegment>> matches) {
+        // 상위 3개 결과의 가중 평균
+        double weightedSum = 0.0;
+        double weightSum = 0.0;
+
+        int topK = Math.min(3, matches.size());
+        for (int i = 0; i < topK; i++) {
+            double weight = 1.0 / (i + 1); // 1.0, 0.5, 0.33...
+            double score = matches.get(i).score();
+
+            // 코사인 유사도: 0.8+ = 높음, 0.7~0.8 = 중간, 0.6~0.7 = 낮음, 0.6 미만 = 매우 낮음
+            // Phase 4.2: Hybrid Search에서 BM25 가중치가 높으므로 Vector는 보조 역할
+            // 따라서 더 관대하게 평가
+            double normalizedScore;
+            if (score >= 0.8) {
+                normalizedScore = 0.75 + (score - 0.8) * 1.25; // 0.75~1.0
+            } else if (score >= 0.7) {
+                normalizedScore = 0.60 + (score - 0.7) * 1.5; // 0.60~0.75
+            } else if (score >= 0.6) {
+                normalizedScore = 0.45 + (score - 0.6) * 1.5; // 0.45~0.60
+            } else if (score >= 0.5) {
+                normalizedScore = 0.30 + (score - 0.5) * 1.5; // 0.30~0.45
+            } else {
+                normalizedScore = Math.max(0.15, score * 0.6); // 0.15~0.30 (최소 0.15 보장)
+            }
+
+            weightedSum += normalizedScore * weight;
+            weightSum += weight;
+        }
+
+        return weightSum > 0 ? weightedSum / weightSum : 0.0;
+    }
+
+    /**
+     * 결과 개수 기반 신뢰도 조정
+     * 결과가 너무 적으면 신뢰도 감소
+     */
+    private double calculateCountFactor(int resultCount) {
+        if (resultCount >= 3) {
+            return 1.0; // 충분한 결과
+        } else if (resultCount == 2) {
+            return 0.9; // 약간 부족
+        } else if (resultCount == 1) {
+            return 0.75; // 단일 결과 (신뢰도 낮춤)
+        } else {
+            return 0.0; // 결과 없음
+        }
+    }
+
+    /**
+     * 점수 분포 일관성 평가
+     * 상위 결과들의 점수가 비슷하면 더 신뢰할 수 있음
+     */
+    private double calculateConsistencyFactor(List<EmbeddingMatch<TextSegment>> matches) {
+        if (matches.size() < 2) {
+            return 1.0; // 단일 결과는 일관성 평가 불가
+        }
+
+        // 상위 3개 결과의 점수 표준편차 계산
+        int topK = Math.min(3, matches.size());
+        double[] scores = new double[topK];
+        double sum = 0.0;
+
+        for (int i = 0; i < topK; i++) {
+            scores[i] = matches.get(i).score();
+            sum += scores[i];
+        }
+
+        double mean = sum / topK;
+        double variance = 0.0;
+
+        for (double score : scores) {
+            variance += Math.pow(score - mean, 2);
+        }
+
+        double stdDev = Math.sqrt(variance / topK);
+
+        // 표준편차가 낮을수록 일관성 높음
+        // 0~0.05: 매우 일관적 (1.0), 0.05~0.1: 일관적 (0.95), 0.1+: 불일치 (0.85)
+        if (stdDev < 0.05) {
+            return 1.0;
+        } else if (stdDev < 0.1) {
+            return 0.95;
+        } else {
+            return 0.85;
+        }
     }
 
     /**

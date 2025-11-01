@@ -282,18 +282,28 @@ public class AnswerQualityEnhancer {
     }
 
     /**
-     * 신뢰도 기반 답변 보강
+     * 신뢰도 기반 답변 보강 (개선된 버전)
      */
     public static String addConfidenceIndicator(String answer, double confidenceScore) {
         StringBuilder result = new StringBuilder(answer);
 
         // 신뢰도에 따라 안내 메시지 추가
-        if (confidenceScore < 0.5) {
-            result.append("\n\n⚠️ 참고: 검색 결과의 관련도가 낮을 수 있습니다. 정확한 정보는 인사팀에 확인하시기 바랍니다.");
-        } else if (confidenceScore < 0.7) {
-            result.append("\n\n💡 참고: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다.");
+        if (confidenceScore >= 0.85) {
+            // 매우 높은 신뢰도 (85% 이상) - 긍정적 메시지
+            result.append("\n\n✅ **신뢰도: 높음** - 규정 내용과 높은 관련성이 확인되었습니다.");
+        } else if (confidenceScore >= 0.7) {
+            // 높은 신뢰도 (70~85%) - 메시지 없음 (기본)
+            // 충분히 신뢰할 수 있는 수준이므로 별도 메시지 불필요
+        } else if (confidenceScore >= 0.5) {
+            // 중간 신뢰도 (50~70%) - 확인 권장
+            result.append("\n\n💡 **참고**: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다.");
+        } else if (confidenceScore >= 0.3) {
+            // 낮은 신뢰도 (30~50%) - 주의 필요
+            result.append("\n\n⚠️ **주의**: 검색 결과의 관련도가 낮을 수 있습니다. 정확한 정보는 인사팀에 확인하시기 바랍니다.");
+        } else {
+            // 매우 낮은 신뢰도 (30% 미만) - 강한 경고
+            result.append("\n\n🚨 **경고**: 관련 규정을 찾기 어렵습니다. 반드시 인사팀에 문의하여 정확한 정보를 확인하시기 바랍니다.");
         }
-        // 0.7 이상은 높은 신뢰도로 추가 메시지 없음
 
         return result.toString();
     }
