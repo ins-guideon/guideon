@@ -3,75 +3,55 @@ package com.guideon.controller;
 import com.guideon.dto.ApiResponse;
 import com.guideon.dto.LoginRequest;
 import com.guideon.dto.LoginResponse;
+import com.guideon.dto.RegisterRequest;
 import com.guideon.dto.UserDTO;
+import com.guideon.service.AuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
+import org.springframework.security.core.Authentication;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         logger.info("로그인 시도: username={}", request.getUsername());
-
         try {
-            // TODO: 실제 인증 로직 구현 필요
-            // 현재는 테스트용으로 admin/admin 만 허용
-            if ("admin".equals(request.getUsername()) && "admin".equals(request.getPassword())) {
-                // 임시 토큰 생성
-                String token = "Bearer " + UUID.randomUUID().toString();
-
-                // 사용자 정보 생성
-                UserDTO user = new UserDTO(
-                    "1",
-                    request.getUsername(),
-                    "관리자",
-                    "admin@guideon.com",
-                    "ADMIN"
-                );
-
-                LoginResponse loginResponse = new LoginResponse(token, user);
-                logger.info("로그인 성공: username={}", request.getUsername());
-
-                return ApiResponse.success(loginResponse);
-            } else {
-                logger.warn("로그인 실패: 잘못된 인증 정보 - username={}", request.getUsername());
-                return ApiResponse.error("아이디 또는 비밀번호가 올바르지 않습니다.");
-            }
+            LoginResponse res = authService.login(request);
+            logger.info("로그인 성공: username={}", request.getUsername());
+            return ApiResponse.success(res);
         } catch (Exception e) {
-            logger.error("로그인 처리 중 오류 발생", e);
-            return ApiResponse.error("로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
+            logger.warn("로그인 실패: username={}, error={}", request.getUsername(), e.getMessage());
+            return ApiResponse.error(e.getMessage());
         }
     }
 
-    @PostMapping("/logout")
-    public ApiResponse<Void> logout() {
-        logger.info("로그아웃 요청");
-        // TODO: 실제 로그아웃 로직 구현 (세션 무효화, 토큰 삭제 등)
-        return ApiResponse.success(null);
+    @PostMapping("/register")
+    public ApiResponse<UserDTO> register(@Valid @RequestBody RegisterRequest request) {
+        logger.info("회원가입 요청: username={}", request.getUsername());
+        try {
+            UserDTO user = authService.register(request);
+            return ApiResponse.success(user);
+        } catch (Exception e) {
+            logger.warn("회원가입 실패: username={}, error={}", request.getUsername(), e.getMessage());
+            return ApiResponse.error(e.getMessage());
+        }
     }
 
     @GetMapping("/me")
-    public ApiResponse<UserDTO> getCurrentUser() {
+    public ApiResponse<UserDTO> getCurrentUser(Authentication authentication) {
         logger.info("현재 사용자 정보 조회 요청");
-
-        // TODO: 실제 인증된 사용자 정보 반환
-        // 현재는 테스트용 데이터 반환
-        UserDTO user = new UserDTO(
-            "1",
-            "admin",
-            "관리자",
-            "admin@guideon.com",
-            "ADMIN"
-        );
-
-        return ApiResponse.success(user);
+        return ApiResponse.success(authService.getCurrentUser(authentication.getName()));
     }
 }

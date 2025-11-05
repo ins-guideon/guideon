@@ -12,6 +12,13 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  name: string;
+  email: string;
+}
+
 export const authService = {
   // 로그인
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
@@ -23,19 +30,32 @@ export const authService = {
       throw new Error(response.error || '로그인에 실패했습니다.');
     }
 
-    // 토큰 저장
-    localStorage.setItem('auth_token', response.data.token);
+    // 토큰 저장: rememberMe=true -> localStorage, false -> sessionStorage
+    const token = response.data.token;
+    if (credentials.rememberMe) {
+      localStorage.setItem('auth_token', token);
+      sessionStorage.removeItem('auth_token');
+    } else {
+      sessionStorage.setItem('auth_token', token);
+      localStorage.removeItem('auth_token');
+    }
 
     return response.data;
   },
 
   // 로그아웃
   logout: async (): Promise<void> => {
-    try {
-      await api.post('/auth/logout');
-    } finally {
-      localStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_token');
+  },
+
+  // 회원가입
+  register: async (payload: RegisterRequest): Promise<User> => {
+    const response = await api.post<ApiResponse<User>>('/auth/register', payload);
+    if (!response.success || !response.data) {
+      throw new Error(response.error || '회원가입에 실패했습니다.');
     }
+    return response.data;
   },
 
   // 현재 사용자 정보 조회
@@ -49,6 +69,6 @@ export const authService = {
 
   // 토큰 확인
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('auth_token');
+    return !!sessionStorage.getItem('auth_token') || !!localStorage.getItem('auth_token');
   },
 };

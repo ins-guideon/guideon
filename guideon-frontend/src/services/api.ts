@@ -16,8 +16,10 @@ export const apiClient = axios.create({
 // 요청 인터셉터
 apiClient.interceptors.request.use(
   (config) => {
-    // 로컬 스토리지에서 토큰 가져오기
-    const token = localStorage.getItem('auth_token');
+    // 스토리지에서 토큰 가져오기 (sessionStorage 우선)
+    const sessionToken = sessionStorage.getItem('auth_token');
+    const localToken = localStorage.getItem('auth_token');
+    const token = sessionToken || localToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,6 +36,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // 인증 실패시 로그인 페이지로 리다이렉트
+      sessionStorage.removeItem('auth_token');
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
     }

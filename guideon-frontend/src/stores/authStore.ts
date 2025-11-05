@@ -47,9 +47,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   loadUser: async () => {
-    // 임시: 인증 API가 없으므로 기본 사용자로 설정
-    // TODO: 백엔드 인증 API 구현 후 주석 해제
-    /*
     if (!authService.isAuthenticated()) {
       set({ user: null, isAuthenticated: false });
       return;
@@ -62,17 +59,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
-    */
-
-    // 임시: 기본 사용자로 자동 로그인
-    const dummyUser: User = {
-      id: '1',
-      username: 'admin',
-      name: '관리자',
-      email: 'admin@guideon.com',
-      role: 'ADMIN',
-    };
-    set({ user: dummyUser, isAuthenticated: true, isLoading: false });
   },
 
   clearError: () => set({ error: null }),

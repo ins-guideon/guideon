@@ -2,8 +2,9 @@
 export interface User {
   id: string;
   username: string;
+  name: string;
   email: string;
-  role: 'admin' | 'user';
+  role: 'ADMIN' | 'USER';
 }
 
 // 질문 분석 결과

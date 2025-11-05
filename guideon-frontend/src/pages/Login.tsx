@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, Checkbox, message } from 'antd';
+import { Form, Input, Button, Card, Checkbox, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -86,6 +86,12 @@ export const Login = () => {
               로그인
             </Button>
           </Form.Item>
+          <div style={{ marginTop: 16, textAlign: 'center' }}>
+            <Typography.Text type="secondary">
+              계정이 없으신가요?{' '}
+              <a href="/register">회원가입</a>
+            </Typography.Text>
+          </div>
         </Form>
       </Card>
     </div>

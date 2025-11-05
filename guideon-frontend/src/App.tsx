@@ -7,6 +7,7 @@ import { useAuthStore } from './stores/authStore';
 import { PrivateRoute } from './components/common/PrivateRoute';
 import { MainLayout } from './components/layout/MainLayout';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { QAPage } from './pages/QAPage';
 import { DocumentUpload } from './pages/DocumentUpload';
@@ -41,6 +42,7 @@ function App() {
           <Routes>
             {/* 로그인 페이지 */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
             {/* 보호된 라우트 */}
             <Route

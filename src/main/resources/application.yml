@@ -13,6 +13,22 @@ server:
 spring:
   application:
     name: guideon
+  datasource:
+    url: jdbc:h2:file:./data/guideon;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
   servlet:
     multipart:
       max-file-size: 10MB
@@ -84,6 +100,13 @@ logging:
   charset:
     console: UTF-8
     file: UTF-8
+
+# Security / JWT
+security:
+  jwt:
+    secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
+    access-validity-ms: 3600000 # 1 hour
+    remember-validity-ms: 1209600000 # 14 days
 
 # Regulation Types
 regulation:
