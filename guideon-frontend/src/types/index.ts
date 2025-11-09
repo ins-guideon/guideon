@@ -167,3 +167,14 @@ export interface DocumentListResponse {
   documents: DocumentInfo[];
   totalCount: number;
 }
+
+export interface DocumentDetailResponse {
+  id: number;
+  fileName: string;
+  regulationType: string;
+  uploadTime: number;
+  content: string;
+  uploaderName: string;
+  fileSize: number;
+  status: string;
+}

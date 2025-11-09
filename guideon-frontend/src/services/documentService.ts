@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   DocumentUploadResponse,
   DocumentListResponse,
+  DocumentDetailResponse,
 } from '@/types';
 
 export const documentService = {
@@ -27,11 +28,29 @@ export const documentService = {
     return response.data;
   },
 
-  // 문서 목록 조회
+  // 문서 목록 조회 (벡터 인덱싱용)
   getDocuments: async (): Promise<DocumentListResponse> => {
     const response = await api.get<ApiResponse<DocumentListResponse>>('/documents');
     if (!response.success || !response.data) {
       throw new Error(response.error || '문서 목록 조회 중 오류가 발생했습니다.');
+    }
+    return response.data;
+  },
+
+  // 문서 조회 목록 (DB에서 조회)
+  getDocumentsForView: async (): Promise<DocumentListResponse> => {
+    const response = await api.get<ApiResponse<DocumentListResponse>>('/documents/view');
+    if (!response.success || !response.data) {
+      throw new Error(response.error || '문서 조회 목록 중 오류가 발생했습니다.');
+    }
+    return response.data;
+  },
+
+  // 문서 상세 조회
+  getDocumentDetail: async (id: number): Promise<DocumentDetailResponse> => {
+    const response = await api.get<ApiResponse<DocumentDetailResponse>>(`/documents/view/${id}`);
+    if (!response.success || !response.data) {
+      throw new Error(response.error || '문서 상세 조회 중 오류가 발생했습니다.');
     }
     return response.data;
   },

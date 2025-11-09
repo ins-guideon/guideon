@@ -1,5 +1,8 @@
 package com.guideon.service;
 
+import com.guideon.model.UserAccount;
+import com.guideon.repository.DocumentRepository;
+import com.guideon.repository.UserAccountRepository;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.parser.apache.pdfbox.ApachePdfBoxDocumentParser;
@@ -7,6 +10,7 @@ import dev.langchain4j.data.document.parser.apache.poi.ApachePoiDocumentParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -14,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,19 +33,25 @@ public class DocumentService {
 
     private final RegulationSearchService regulationSearchService;
     private final VectorStoreService vectorStoreService;
+    private final DocumentRepository documentRepository;
+    private final UserAccountRepository userAccountRepository;
     private final DocumentParser pdfParser;
     private final DocumentParser docParser;
 
     // 업로드된 파일 저장 경로
     private final String uploadDir;
 
-    // 인덱싱된 문서 정보 저장 (실제로는 DB에 저장해야 함)
+    // 인덱싱된 문서 정보 저장 (벡터 인덱싱용 메타데이터)
     private final List<DocumentMetadata> indexedDocuments;
 
     public DocumentService(RegulationSearchService regulationSearchService,
-                          VectorStoreService vectorStoreService) {
+                          VectorStoreService vectorStoreService,
+                          DocumentRepository documentRepository,
+                          UserAccountRepository userAccountRepository) {
         this.regulationSearchService = regulationSearchService;
         this.vectorStoreService = vectorStoreService;
+        this.documentRepository = documentRepository;
+        this.userAccountRepository = userAccountRepository;
         this.pdfParser = new ApachePdfBoxDocumentParser();
         this.docParser = new ApachePoiDocumentParser();
         this.uploadDir = System.getProperty("user.home") + "/guideon/uploads";
@@ -93,7 +104,8 @@ public class DocumentService {
     /**
      * 문서 업로드 및 인덱싱
      */
-    public DocumentMetadata uploadAndIndexDocument(MultipartFile file, String regulationType) {
+    @Transactional
+    public DocumentMetadata uploadAndIndexDocument(MultipartFile file, String regulationType, String username) {
         logger.info("Processing document upload: {} (type: {})", file.getOriginalFilename(), regulationType);
 
         try {
@@ -105,19 +117,35 @@ public class DocumentService {
             Path savedFilePath = Paths.get(uploadDir, savedFileName);
 
             // 3. 문서 파싱
-            Document document = parseDocument(file, savedFilePath);
+            dev.langchain4j.data.document.Document document = parseDocument(file, savedFilePath);
+            String content = document.text();
 
-            // 4. 메타데이터 추가
+            // 4. 사용자 조회
+            UserAccount uploader = userAccountRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username));
+
+            // 5. DB에 문서 저장
+            com.guideon.model.Document dbDocument = new com.guideon.model.Document(
+                file.getOriginalFilename(),
+                regulationType,
+                Instant.now(),
+                content,
+                uploader,
+                file.getSize()
+            );
+            dbDocument = documentRepository.save(dbDocument);
+
+            // 6. 메타데이터 추가
             document.metadata().put("file_name", file.getOriginalFilename());
             document.metadata().put("regulation_type", regulationType);
             document.metadata().put("upload_timestamp", System.currentTimeMillis());
 
-            // 5. 벡터 인덱싱
+            // 7. 벡터 인덱싱
             regulationSearchService.indexDocument(document, regulationType);
 
-            // 6. 메타데이터 저장
+            // 8. 메타데이터 저장 (벡터 인덱싱용)
             DocumentMetadata metadata = new DocumentMetadata(
-                UUID.randomUUID().toString(),
+                String.valueOf(dbDocument.getId()),
                 file.getOriginalFilename(),
                 regulationType,
                 file.getSize(),
@@ -131,7 +159,7 @@ public class DocumentService {
             // 벡터 데이터 및 메타데이터 저장
             saveToFileSystem();
 
-            logger.info("Document indexed successfully: {}", file.getOriginalFilename());
+            logger.info("Document indexed successfully: {} (ID: {})", file.getOriginalFilename(), dbDocument.getId());
             return metadata;
 
         } catch (Exception e) {
@@ -242,30 +270,55 @@ public class DocumentService {
     }
 
     /**
-     * 인덱싱된 문서 목록 조회
+     * 인덱싱된 문서 목록 조회 (벡터 인덱싱용 메타데이터)
      */
     public List<DocumentMetadata> getIndexedDocuments() {
         return new ArrayList<>(indexedDocuments);
     }
 
     /**
+     * DB에서 문서 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<com.guideon.model.Document> getAllDocuments() {
+        return documentRepository.findAllByOrderByUploadTimeDesc();
+    }
+
+    /**
+     * DB에서 문서 상세 조회
+     */
+    @Transactional(readOnly = true)
+    public com.guideon.model.Document getDocumentById(Long id) {
+        return documentRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + id));
+    }
+
+    /**
      * 문서 삭제
      */
+    @Transactional
     public void deleteDocument(String documentId) {
         logger.info("Deleting document: {}", documentId);
 
-        DocumentMetadata metadata = indexedDocuments.stream()
-            .filter(doc -> doc.getId().equals(documentId))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + documentId));
-
         try {
-            // 파일 삭제
-            Path filePath = Paths.get(uploadDir, metadata.getSavedFileName());
-            Files.deleteIfExists(filePath);
+            Long id = Long.parseLong(documentId);
+            com.guideon.model.Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + documentId));
 
-            // 메타데이터 삭제
-            indexedDocuments.remove(metadata);
+            // 파일 삭제 (메타데이터에서 찾기)
+            DocumentMetadata metadata = indexedDocuments.stream()
+                .filter(doc -> doc.getId().equals(documentId))
+                .findFirst()
+                .orElse(null);
+
+            if (metadata != null) {
+                Path filePath = Paths.get(uploadDir, metadata.getSavedFileName());
+                Files.deleteIfExists(filePath);
+                indexedDocuments.remove(metadata);
+            }
+
+            // DB에서 삭제
+            documentRepository.delete(document);
 
             // 변경사항 저장
             saveToFileSystem();
