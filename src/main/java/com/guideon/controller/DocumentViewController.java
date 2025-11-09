@@ -5,6 +5,9 @@ import com.guideon.dto.DocumentDetailResponse;
 import com.guideon.dto.DocumentListResponse;
 import com.guideon.model.Document;
 import com.guideon.service.DocumentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/documents/view")
 @CrossOrigin(origins = "http://localhost:3000")
+@Tag(name = "문서 조회 API", description = "DB에서 문서 목록 및 상세 정보를 조회하는 API")
 public class DocumentViewController {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentViewController.class);
@@ -37,6 +41,7 @@ public class DocumentViewController {
      *
      * @return 문서 목록
      */
+    @Operation(summary = "문서 목록 조회", description = "DB에 저장된 모든 문서 목록을 조회합니다.")
     @GetMapping
     public ApiResponse<DocumentListResponse> getDocumentsForView() {
         logger.info("문서 조회 목록 요청");
@@ -73,8 +78,11 @@ public class DocumentViewController {
      * @param id 문서 ID
      * @return 문서 상세 정보
      */
+    @Operation(summary = "문서 상세 조회", description = "지정된 ID의 문서 상세 정보를 조회합니다.")
     @GetMapping("/{id}")
-    public ApiResponse<DocumentDetailResponse> getDocumentDetail(@PathVariable Long id) {
+    public ApiResponse<DocumentDetailResponse> getDocumentDetail(
+            @Parameter(description = "조회할 문서 ID", required = true)
+            @PathVariable Long id) {
         logger.info("문서 상세 조회 요청: {}", id);
 
         try {

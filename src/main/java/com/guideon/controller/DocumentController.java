@@ -4,6 +4,9 @@ import com.guideon.dto.ApiResponse;
 import com.guideon.dto.DocumentListResponse;
 import com.guideon.dto.DocumentUploadResponse;
 import com.guideon.service.DocumentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/documents")
 @CrossOrigin(origins = "http://localhost:3000")
+@Tag(name = "문서 관리 API", description = "문서 업로드, 조회, 삭제 API")
 public class DocumentController {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentController.class);
@@ -45,9 +49,12 @@ public class DocumentController {
      * @param authentication 인증 정보
      * @return 업로드 결과
      */
+    @Operation(summary = "문서 업로드", description = "PDF, DOC, DOCX, TXT 파일을 업로드하고 벡터 인덱싱을 수행합니다.")
     @PostMapping("/upload")
     public ApiResponse<DocumentUploadResponse> uploadDocument(
+            @Parameter(description = "업로드할 문서 파일", required = true)
             @RequestParam("file") MultipartFile file,
+            @Parameter(description = "규정 유형 (예: 이사회규정, 접대비사용규정 등)", required = true)
             @RequestParam("regulationType") String regulationType,
             Authentication authentication) {
 
@@ -87,6 +94,7 @@ public class DocumentController {
      *
      * @return 문서 목록
      */
+    @Operation(summary = "문서 목록 조회", description = "인덱싱된 모든 문서 목록을 조회합니다.")
     @GetMapping
     public ApiResponse<DocumentListResponse> getDocuments() {
         logger.info("문서 목록 조회 요청");
@@ -124,8 +132,11 @@ public class DocumentController {
      * @param id 문서 ID
      * @return 삭제 결과
      */
+    @Operation(summary = "문서 삭제", description = "지정된 ID의 문서를 삭제합니다.")
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteDocument(@PathVariable String id) {
+    public ApiResponse<Void> deleteDocument(
+            @Parameter(description = "삭제할 문서 ID", required = true)
+            @PathVariable String id) {
         logger.info("문서 삭제 요청: {}", id);
 
         try {

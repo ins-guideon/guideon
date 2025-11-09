@@ -10,6 +10,8 @@ import com.guideon.model.RegulationSearchResult;
 import com.guideon.service.QAService;
 import com.guideon.service.QueryAnalysisService;
 import com.guideon.service.RegulationSearchService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/qa")
 @CrossOrigin(origins = "http://localhost:5173")
+@Tag(name = "Q&A API", description = "규정 질문 및 검색 API")
 public class QAController {
 
     private static final Logger logger = LoggerFactory.getLogger(QAController.class);
@@ -49,6 +52,7 @@ public class QAController {
      * @param request 사용자 질문
      * @return 질문 분석 + 답변 + 참조 규정
      */
+    @Operation(summary = "질문하기", description = "규정에 대한 질문을 입력하면 AI가 답변과 함께 관련 규정을 제공합니다.")
     @PostMapping("/ask")
     public ApiResponse<QuestionAnswerDTO> askQuestion(@Valid @RequestBody QuestionRequest request) {
         logger.info("질문 요청: {}", request.getQuestion());
@@ -69,6 +73,7 @@ public class QAController {
      * @param request 사용자 질문
      * @return 분석 결과 (키워드, 규정 유형, 의도, 검색 쿼리)
      */
+    @Operation(summary = "질문 분석", description = "사용자 질문을 분석하여 키워드, 규정 유형, 의도 등을 추출합니다.")
     @PostMapping("/analyze")
     public ResponseEntity<AnalysisResponse> analyzeQuestion(@Valid @RequestBody QuestionRequest request) {
         try {
@@ -94,6 +99,7 @@ public class QAController {
      * @param request 사용자 질문
      * @return 검색 결과 (답변, 근거 조항, 신뢰도)
      */
+    @Operation(summary = "규정 검색", description = "질문을 분석하고 RAG 검색을 통해 관련 규정을 검색합니다.")
     @PostMapping("/search")
     public ResponseEntity<SearchResponse> searchRegulation(@Valid @RequestBody QuestionRequest request) {
         try {

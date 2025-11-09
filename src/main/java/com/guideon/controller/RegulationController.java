@@ -4,6 +4,8 @@ import com.guideon.dto.UploadRequest;
 import com.guideon.service.RegulationSearchService;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/regulations")
+@Tag(name = "규정 관리 API", description = "규정 문서 업로드 및 규정 유형 조회 API")
 public class RegulationController {
 
     private static final Logger logger = LoggerFactory.getLogger(RegulationController.class);
@@ -51,6 +54,7 @@ public class RegulationController {
      * @param request 파일 경로 및 규정 유형
      * @return 업로드 결과
      */
+    @Operation(summary = "규정 문서 업로드", description = "파일 시스템 경로를 통해 규정 문서를 업로드하고 인덱싱합니다.")
     @PostMapping("/upload")
     public ResponseEntity<Map<String, Object>> uploadRegulation(@Valid @RequestBody UploadRequest request) {
         Map<String, Object> response = new HashMap<>();
@@ -90,6 +94,7 @@ public class RegulationController {
      *
      * @return 27개 규정 유형 목록
      */
+    @Operation(summary = "규정 유형 목록 조회", description = "지원하는 모든 규정 유형 목록을 조회합니다.")
     @GetMapping("/types")
     public ResponseEntity<Map<String, Object>> getRegulationTypes() {
         Map<String, Object> response = new HashMap<>();

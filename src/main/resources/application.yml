@@ -108,6 +108,17 @@ security:
     access-validity-ms: 3600000 # 1 hour
     remember-validity-ms: 1209600000 # 14 days
 
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+
 # Regulation Types
 regulation:
   types:
