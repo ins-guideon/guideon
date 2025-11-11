@@ -1,6 +1,7 @@
 package com.guideon.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.guideon.model.DocumentMetadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -101,13 +102,13 @@ public class VectorStoreService {
     /**
      * 문서 메타데이터를 파일에 저장
      */
-    public void saveMetadata(List<DocumentService.DocumentMetadata> metadata) {
+    public void saveMetadata(List<DocumentMetadata> metadata) {
         logger.info("Saving document metadata to file system...");
 
         try {
             // 메타데이터를 직렬화 가능한 형태로 변환
             List<Map<String, Object>> serializable = new ArrayList<>();
-            for (DocumentService.DocumentMetadata doc : metadata) {
+            for (DocumentMetadata doc : metadata) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", doc.getId());
                 map.put("fileName", doc.getFileName());
@@ -135,7 +136,7 @@ public class VectorStoreService {
      * 파일에서 문서 메타데이터 로드
      */
     @SuppressWarnings("unchecked")
-    public List<DocumentService.DocumentMetadata> loadMetadata() {
+    public List<DocumentMetadata> loadMetadata() {
         logger.info("Loading document metadata from file system...");
 
         try {
@@ -150,9 +151,9 @@ public class VectorStoreService {
             List<Map<String, Object>> serializable =
                 objectMapper.readValue(new File(metadataFile), List.class);
 
-            List<DocumentService.DocumentMetadata> metadata = new ArrayList<>();
+            List<DocumentMetadata> metadata = new ArrayList<>();
             for (Map<String, Object> map : serializable) {
-                DocumentService.DocumentMetadata doc = new DocumentService.DocumentMetadata(
+                DocumentMetadata doc = new DocumentMetadata(
                     (String) map.get("id"),
                     (String) map.get("fileName"),
                     (String) map.get("regulationType"),
@@ -215,7 +216,7 @@ public class VectorStoreService {
 
             if (Files.exists(metadataPath)) {
                 stats.put("metadataSize", Files.size(metadataPath));
-                List<DocumentService.DocumentMetadata> metadata = loadMetadata();
+                List<DocumentMetadata> metadata = loadMetadata();
                 stats.put("documentCount", metadata.size());
             }
 

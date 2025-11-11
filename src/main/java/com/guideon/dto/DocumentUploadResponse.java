@@ -1,5 +1,7 @@
 package com.guideon.dto;
 
+import com.guideon.model.DocumentMetadata;
+
 /**
  * 문서 업로드 응답 DTO
  */
@@ -23,6 +25,16 @@ public class DocumentUploadResponse {
         this.fileSize = fileSize;
         this.uploadTimestamp = uploadTimestamp;
         this.status = status;
+        this.message = message;
+    }
+
+    public DocumentUploadResponse(DocumentMetadata metadata, String message) {
+        this.id = metadata.getId();
+        this.fileName = metadata.getFileName();
+        this.regulationType = metadata.getRegulationType();
+        this.fileSize = metadata.getFileSize();
+        this.uploadTimestamp = metadata.getUploadTimestamp();
+        this.status = metadata.getStatus();
         this.message = message;
     }
 

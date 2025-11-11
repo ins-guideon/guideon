@@ -178,19 +178,17 @@ public class RegulationSearchService {
         }
 
         // 임베딩 생성 및 Vector Store에 저장
-        int segmentIndex = 0;
-        for (TextSegment segment : segments) {
+        for (int segmentIndex=0 ; segmentIndex<segments.size() ; segmentIndex++) {
+            TextSegment segment = segments.get(segmentIndex);
             Embedding embedding = embeddingModel.embed(segment).content();
             String embeddingId = embeddingStore.add(embedding, segment);
 
             // Hybrid Search가 활성화된 경우 BM25 인덱스에도 추가
             if (hybridSearchEnabled && hybridSearchService != null) {
                 String segmentId = embeddingId != null ? embeddingId :
-                    String.format("%s_segment_%d", regulationType, segmentIndex);
+                        String.format("%s_segment_%d", regulationType, segmentIndex);
                 hybridSearchService.indexSegment(segment, regulationType, segmentId);
             }
-
-            segmentIndex++;
         }
 
         // BM25 인덱스 커밋 (변경사항 저장)

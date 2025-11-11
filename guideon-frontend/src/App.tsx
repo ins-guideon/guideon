@@ -15,6 +15,7 @@ import { Regulations } from './pages/Regulations';
 import { History } from './pages/History';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
+import { DocumentUploadDetail } from './pages/DocumentUploadDetail';
 
 // React Query 클라이언트 생성
 const queryClient = new QueryClient({
@@ -55,6 +56,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/qa" element={<QAPage />} />
               <Route path="/documents" element={<DocumentUpload />} />
+              <Route path="/documents/upload/:uploadId" element={<DocumentUploadDetail />} />
               <Route path="/regulations" element={<Regulations />} />
               <Route path="/history" element={<History />} />
               <Route path="/analytics" element={<Analytics />} />

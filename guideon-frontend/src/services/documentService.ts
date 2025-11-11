@@ -6,6 +6,39 @@ import type {
 } from '@/types';
 
 export const documentService = {
+  // 텍스트 추출 (임시 저장 후 본문 반환)
+  extractText: async (file: File, regulationType: string): Promise<{ uploadId: string; text: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('regulationType', regulationType);
+
+    const response = await api.post<ApiResponse<{ uploadId: string; text: string }>>(
+      '/documents/extract-text',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    if (!response.success || !response.data) {
+      throw new Error(response.error || response.message || '텍스트 추출 중 오류가 발생했습니다.');
+    }
+    return response.data;
+  },
+
+  // 확정 후 임베딩/메타 저장
+  confirmEmbedding: async (uploadId: string, text: string): Promise<DocumentUploadResponse> => {
+    const response = await api.post<ApiResponse<DocumentUploadResponse>>(
+      `/documents/${uploadId}/confirm`,
+      { text }
+    );
+    if (!response.success || !response.data) {
+      throw new Error(response.error || response.message || '확정 처리 중 오류가 발생했습니다.');
+    }
+    return response.data;
+  },
+
   // 문서 업로드
   uploadDocument: async (file: File, regulationType: string): Promise<DocumentUploadResponse> => {
     const formData = new FormData();

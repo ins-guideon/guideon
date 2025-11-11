@@ -87,6 +87,52 @@ PDF, DOC, DOCX, TXT 파일을 업로드하여 자동으로 파싱하고 벡터 �
 }
 ```
 
+### 4. (신규) POST /api/documents/extract-text
+업로드 직후 파일을 temp에 저장하고, 타입별 파서로 텍스트만 추출하여 반환합니다. 확정 전 단계의 프리뷰 용도입니다.
+
+요청:
+- Content-Type: `multipart/form-data`
+- Parameters:
+  - `file`: 업로드할 파일 (PDF, DOC, DOCX, TXT)
+  - `regulationType`: 규정 유형
+
+응답:
+```json
+{
+  "success": true,
+  "data": {
+    "uploadId": "uuid-string",
+    "text": "추출된 텍스트 ..."
+  }
+}
+```
+
+### 5. (신규) POST /api/documents/{uploadId}/confirm
+프리뷰에서 확인/수정한 텍스트를 확정합니다. 이 시점에 temp→upload로 파일을 이동하고, 확정된 텍스트를 기반으로 청킹/임베딩/벡터 저장 및 메타데이터 저장을 수행합니다.
+
+요청:
+- Content-Type: `application/json`
+- Body:
+```json
+{ "text": "확정된 텍스트 내용" }
+```
+
+응답(`DocumentUploadResponse`):
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-string",
+    "fileName": "원본파일명.pdf",
+    "regulationType": "출장여비지급규정",
+    "fileSize": 1048576,
+    "uploadTimestamp": 1234567890000,
+    "status": "indexed",
+    "message": "문서가 성공적으로 확정되고 인덱싱되었습니다."
+  }
+}
+```
+
 ## 📝 사용 방법
 
 ### 1. 백엔드 서버 시작
