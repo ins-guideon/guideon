@@ -35,7 +35,7 @@ export const DocumentView = () => {
   const handleFileNameClick = async (record: DocumentInfo) => {
     setIsDetailLoading(true);
     try {
-      const detail = await documentService.getDocumentDetail(Number(record.id));
+      const detail = await documentService.getDocumentDetail(record.id);
       setSelectedDocument(detail);
       setModalVisible(true);
     } catch (error) {
@@ -177,8 +177,8 @@ export const DocumentView = () => {
                 {selectedDocument.fileSize < 1024
                   ? `${selectedDocument.fileSize} B`
                   : selectedDocument.fileSize < 1024 * 1024
-                  ? `${(selectedDocument.fileSize / 1024).toFixed(2)} KB`
-                  : `${(selectedDocument.fileSize / (1024 * 1024)).toFixed(2)} MB`}
+                    ? `${(selectedDocument.fileSize / 1024).toFixed(2)} KB`
+                    : `${(selectedDocument.fileSize / (1024 * 1024)).toFixed(2)} MB`}
               </Descriptions.Item>
               <Descriptions.Item label="상태">
                 <Tag
@@ -186,15 +186,15 @@ export const DocumentView = () => {
                     selectedDocument.status === 'indexed'
                       ? 'success'
                       : selectedDocument.status === 'pending'
-                      ? 'processing'
-                      : 'error'
+                        ? 'processing'
+                        : 'error'
                   }
                 >
                   {selectedDocument.status === 'indexed'
                     ? '인덱싱 완료'
                     : selectedDocument.status === 'pending'
-                    ? '대기 중'
-                    : '오류'}
+                      ? '대기 중'
+                      : '오류'}
                 </Tag>
               </Descriptions.Item>
             </Descriptions>

@@ -25,12 +25,14 @@ import type { DocumentInfo } from '@/types';
 import { REGULATION_TYPES } from '@/types';
 import type { UploadFile } from 'antd';
 import dayjs from 'dayjs';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Paragraph, Text } = Typography;
 const { Option } = Select;
 
 export const DocumentUpload = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<string>('');
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
@@ -40,18 +42,17 @@ export const DocumentUpload = () => {
     queryFn: () => documentService.getDocuments(),
   });
 
-  // 문서 업로드
-  const { mutate: uploadDocument, isPending: isUploading } = useMutation({
+  // 텍스트 추출(프리뷰 단계)
+  const { mutate: extractText, isPending: isUploading } = useMutation({
     mutationFn: ({ file, type }: { file: File; type: string }) =>
-      documentService.uploadDocument(file, type),
-    onSuccess: () => {
-      message.success('문서가 성공적으로 업로드되고 인덱싱되었습니다.');
+      documentService.extractText(file, type),
+    onSuccess: ({ id, text }) => {
+      message.success('텍스트를 추출했습니다. 확인 페이지로 이동합니다.');
       setFileList([]);
-      setSelectedType('');
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      navigate(`/documents/upload/${id}`, { state: { text } });
     },
     onError: (error) => {
-      message.error(error instanceof Error ? error.message : '업로드 중 오류가 발생했습니다.');
+      message.error(error instanceof Error ? error.message : '텍스트 추출 중 오류가 발생했습니다.');
     },
   });
 
@@ -79,7 +80,7 @@ export const DocumentUpload = () => {
     }
 
     const file = fileList[0].originFileObj as File;
-    uploadDocument({ file, type: selectedType });
+    extractText({ file, type: selectedType });
   };
 
   const beforeUpload = (file: File) => {
@@ -223,7 +224,11 @@ export const DocumentUpload = () => {
               size="large"
               showSearch
               filterOption={(input, option) =>
-                (option?.children as string).toLowerCase().includes(input.toLowerCase())
+                (() => {
+                  const child = option?.children;
+                  const text = typeof child === 'string' ? child : '';
+                  return text.toLowerCase().includes(input.toLowerCase());
+                })()
               }
             >
               {REGULATION_TYPES.map((type) => (
@@ -267,13 +272,13 @@ export const DocumentUpload = () => {
             }}
             block
           >
-            {isUploading ? '업로드 중...' : '업로드 및 인덱싱'}
+            {isUploading ? '텍스트 추출 중...' : '업로드 후 텍스트 추출'}
           </Button>
 
           {isUploading && (
             <div>
               <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
-                문서를 파싱하고 벡터 임베딩을 생성하는 중입니다...
+                문서를 파싱하여 본문 텍스트를 추출하는 중입니다...
               </Text>
               <Progress percent={100} status="active" showInfo={false} />
             </div>

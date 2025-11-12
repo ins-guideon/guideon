@@ -1,5 +1,7 @@
 package com.guideon.dto;
 
+import com.guideon.model.DocumentMetadata;
+
 import java.util.List;
 
 /**
@@ -8,9 +10,6 @@ import java.util.List;
 public class DocumentListResponse {
     private List<DocumentInfo> documents;
     private int totalCount;
-
-    public DocumentListResponse() {
-    }
 
     public DocumentListResponse(List<DocumentInfo> documents, int totalCount) {
         this.documents = documents;
@@ -47,14 +46,13 @@ public class DocumentListResponse {
         public DocumentInfo() {
         }
 
-        public DocumentInfo(String id, String fileName, String regulationType,
-                          long fileSize, long uploadTimestamp, String status) {
-            this.id = id;
-            this.fileName = fileName;
-            this.regulationType = regulationType;
-            this.fileSize = fileSize;
-            this.uploadTimestamp = uploadTimestamp;
-            this.status = status;
+        public DocumentInfo(DocumentMetadata document) {
+            this.id = document.getId();
+            this.fileName = document.getFileName();
+            this.regulationType = document.getRegulationType();
+            this.fileSize = document.getFileSize() != null ? document.getFileSize() : 0L;
+            this.uploadTimestamp = document.getUploadTime() != null ? document.getUploadTime().toEpochMilli() : 0L;
+            this.status = document.getStatus();
         }
 
         // Getters and Setters

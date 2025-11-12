@@ -418,6 +418,20 @@ result.getReferences().forEach(ref -> {
 #### GET `/api/regulations/types` - 규정 유형 목록
 지원하는 27개 규정 유형 목록을 조회합니다.
 
+### 3. 문서 업로드(프리뷰/확정) API
+
+2단계 업로드 플로우:
+1) 업로드 직후 텍스트만 추출하여 사용자 검수
+2) 확정 시에만 임베딩/인덱싱 및 메타 저장
+
+- POST `/api/documents/extract-text` (multipart/form-data)
+  - form: `file`, `regulationType`
+  - 응답: `{ "success": true, "data": { "uploadId": "uuid", "text": "..." } }`
+
+- POST `/api/documents/{uploadId}/confirm` (application/json)
+  - body: `{ "text": "확정 텍스트" }`
+  - 응답: 기존 업로드 응답(`DocumentUploadResponse`)과 동일
+
 **Response:**
 ```json
 {

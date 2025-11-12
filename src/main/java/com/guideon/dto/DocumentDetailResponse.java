@@ -4,7 +4,7 @@ package com.guideon.dto;
  * 문서 상세 정보 응답 DTO
  */
 public class DocumentDetailResponse {
-    private Long id;
+    private String id;
     private String fileName;
     private String regulationType;
     private Long uploadTime;
@@ -16,9 +16,9 @@ public class DocumentDetailResponse {
     public DocumentDetailResponse() {
     }
 
-    public DocumentDetailResponse(Long id, String fileName, String regulationType,
-                                 Long uploadTime, String content, String uploaderName,
-                                 Long fileSize, String status) {
+    public DocumentDetailResponse(String id, String fileName, String regulationType,
+            Long uploadTime, String content, String uploaderName,
+            Long fileSize, String status) {
         this.id = id;
         this.fileName = fileName;
         this.regulationType = regulationType;
@@ -29,11 +29,11 @@ public class DocumentDetailResponse {
         this.status = status;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -93,4 +93,3 @@ public class DocumentDetailResponse {
         this.status = status;
     }
 }
-

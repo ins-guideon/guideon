@@ -12,9 +12,9 @@ PDF, DOC, DOCX, TXT 파일을 업로드하여 자동으로 파싱하고 벡터 �
 - **청크 분할**: 500자 단위, 100자 오버랩
 
 **주요 파일:**
-- 서비스: [DocumentService.java](src/main/java/com/guideon/service/DocumentService.java)
-- 컨트롤러: [DocumentController.java](src/main/java/com/guideon/controller/DocumentController.java)
-- 벡터 인덱싱: [RegulationSearchService.java:100](src/main/java/com/guideon/service/RegulationSearchService.java#L100)
+- 서비스: [DocumentService.java](src/main/java/com/guideon/service/DocumentService.java) (트랜잭션/DB 저장/임베딩 인덱싱)
+- 컨트롤러: [DocumentController.java](src/main/java/com/guideon/controller/DocumentController.java) (서비스 호출만 수행)
+- 벡터 인덱싱: [RegulationSearchService.java](src/main/java/com/guideon/service/RegulationSearchService.java) (segment 메타: document_id, file_name, regulation_type)
 
 ### ✅ 프론트엔드 (완료)
 - **업로드 UI**: Ant Design Upload 컴포넌트
@@ -28,7 +28,7 @@ PDF, DOC, DOCX, TXT 파일을 업로드하여 자동으로 파싱하고 벡터 �
 
 ## 🚀 API 엔드포인트
 
-### 1. POST /api/documents/upload
+### 1. POST /api/documents/upload (원샷 업로드)
 문서 업로드 및 인덱싱
 
 **요청:**
@@ -53,7 +53,7 @@ PDF, DOC, DOCX, TXT 파일을 업로드하여 자동으로 파싱하고 벡터 �
 }
 ```
 
-### 2. GET /api/documents
+### 2. GET /api/documents (목록 조회)
 인덱싱된 문서 목록 조회
 
 **응답:**
@@ -76,7 +76,7 @@ PDF, DOC, DOCX, TXT 파일을 업로드하여 자동으로 파싱하고 벡터 �
 }
 ```
 
-### 3. DELETE /api/documents/{id}
+### 3. DELETE /api/documents/{id} (삭제)
 문서 삭제
 
 **응답:**
@@ -84,6 +84,52 @@ PDF, DOC, DOCX, TXT 파일을 업로드하여 자동으로 파싱하고 벡터 �
 {
   "success": true,
   "message": "문서가 성공적으로 삭제되었습니다."
+}
+```
+
+### 4. POST /api/documents/extract-text (프리뷰 추출)
+업로드 직후 파일을 temp에 저장하고, 타입별 파서로 텍스트만 추출하여 반환합니다. 확정 전 단계의 프리뷰 용도입니다.
+
+요청:
+- Content-Type: `multipart/form-data`
+- Parameters:
+  - `file`: 업로드할 파일 (PDF, DOC, DOCX, TXT)
+  - `regulationType`: 규정 유형
+
+응답:
+```json
+{
+  "success": true,
+  "data": {
+    "uploadId": "uuid-string",
+    "text": "추출된 텍스트 ..."
+  }
+}
+```
+
+### 5. POST /api/documents/{uploadId}/confirm (확정 인덱싱)
+프리뷰에서 확인/수정한 텍스트를 확정합니다. 이 시점에 temp→upload로 파일을 이동하고, 확정된 텍스트를 기반으로 청킹/임베딩/벡터 저장 및 메타데이터 저장을 수행합니다.
+
+요청:
+- Content-Type: `application/json`
+- Body:
+```json
+{ "text": "확정된 텍스트 내용" }
+```
+
+응답(`DocumentUploadResponse`):
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-string",
+    "fileName": "원본파일명.pdf",
+    "regulationType": "출장여비지급규정",
+    "fileSize": 1048576,
+    "uploadTimestamp": 1234567890000,
+    "status": "indexed",
+    "message": "문서가 성공적으로 확정되고 인덱싱되었습니다."
+  }
 }
 ```
 

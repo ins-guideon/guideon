@@ -169,7 +169,7 @@ export interface DocumentListResponse {
 }
 
 export interface DocumentDetailResponse {
-  id: number;
+  id: string;
   fileName: string;
   regulationType: string;
   uploadTime: number;

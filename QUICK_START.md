@@ -149,6 +149,28 @@ guideon/
 curl -X POST http://localhost:8080/api/regulations/upload \
   -H "Content-Type: application/json" \
   -d '{
+## 새 업로드 플로우(프리뷰 → 확정)
+
+1) 텍스트 추출
+```bash
+curl -X POST "http://localhost:8080/api/documents/extract-text" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@sample.pdf" \
+  -F "regulationType=출장여비지급규정"
+```
+응답 예:
+```json
+{ "success": true, "data": { "uploadId": "xxxxx-uuid", "text": "..." } }
+```
+
+2) 확정
+```bash
+curl -X POST "http://localhost:8080/api/documents/xxxxx-uuid/confirm" \
+  -H "Content-Type: application/json" \
+  -d '{ "text": "확정된 텍스트 내용" }'
+```
+응답은 `DocumentUploadResponse` 형식입니다.
+
     "filePath": "c:/regulations/취업규칙.txt",
     "regulationType": "취업규칙"
   }'

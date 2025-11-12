@@ -112,8 +112,10 @@ public class RegulationSearchService {
             }
         }
 
-        logger.info("RegulationSearchService initialized with maxResults={}, minScore={}, chunkSize={}, chunkOverlap={}, reRankingEnabled={}, hybridSearchEnabled={}",
-                maxResults, minScore, chunkSize, chunkOverlap, reRankingEnabled && scoringModel != null, hybridSearchEnabled);
+        logger.info(
+                "RegulationSearchService initialized with maxResults={}, minScore={}, chunkSize={}, chunkOverlap={}, reRankingEnabled={}, hybridSearchEnabled={}",
+                maxResults, minScore, chunkSize, chunkOverlap, reRankingEnabled && scoringModel != null,
+                hybridSearchEnabled);
     }
 
     /**
@@ -155,7 +157,8 @@ public class RegulationSearchService {
         this.reRankingMinScore = 0.8;
         this.scoringModel = null;
 
-        logger.info("RegulationSearchService initialized with default values (ReRanking disabled, Hybrid Search disabled)");
+        logger.info(
+                "RegulationSearchService initialized with default values (ReRanking disabled, Hybrid Search disabled)");
     }
 
     /**
@@ -166,8 +169,8 @@ public class RegulationSearchService {
 
         // 문서를 청크로 분할
         DocumentSplitter splitter = DocumentSplitters.recursive(
-                chunkSize,      // maxSegmentSize
-                chunkOverlap    // maxOverlapSize
+                chunkSize, // maxSegmentSize
+                chunkOverlap // maxOverlapSize
         );
 
         List<TextSegment> segments = splitter.split(document);
@@ -175,22 +178,28 @@ public class RegulationSearchService {
         // 각 세그먼트에 메타데이터 추가
         for (TextSegment segment : segments) {
             segment.metadata().put("regulation_type", regulationType);
+            String fileName = document.metadata().getString("file_name");
+            if (fileName != null) {
+                segment.metadata().put("file_name", fileName);
+            }
+            String documentId = document.metadata().getString("document_id");
+            if (documentId != null) {
+                segment.metadata().put("document_id", documentId);
+            }
         }
 
         // 임베딩 생성 및 Vector Store에 저장
-        int segmentIndex = 0;
-        for (TextSegment segment : segments) {
+        for (int segmentIndex = 0; segmentIndex < segments.size(); segmentIndex++) {
+            TextSegment segment = segments.get(segmentIndex);
             Embedding embedding = embeddingModel.embed(segment).content();
             String embeddingId = embeddingStore.add(embedding, segment);
 
             // Hybrid Search가 활성화된 경우 BM25 인덱스에도 추가
             if (hybridSearchEnabled && hybridSearchService != null) {
-                String segmentId = embeddingId != null ? embeddingId :
-                    String.format("%s_segment_%d", regulationType, segmentIndex);
+                String segmentId = embeddingId != null ? embeddingId
+                        : String.format("%s_segment_%d", regulationType, segmentIndex);
                 hybridSearchService.indexSegment(segment, regulationType, segmentId);
             }
-
-            segmentIndex++;
         }
 
         // BM25 인덱스 커밋 (변경사항 저장)
@@ -223,8 +232,7 @@ public class RegulationSearchService {
                 relevantSegments = performVectorSearch(
                         analysis.getSearchQuery(),
                         maxResults,
-                        minScore
-                );
+                        minScore);
                 logger.info("Vector Search: Found {} results", relevantSegments.size());
             }
 
@@ -240,8 +248,7 @@ public class RegulationSearchService {
             String answer = generateAnswer(
                     analysis.getOriginalQuery(),
                     relevantSegments,
-                    analysis
-            );
+                    analysis);
 
             // 5. 신뢰도 점수 계산
             double confidenceScore = calculateConfidenceScore(relevantSegments);
@@ -250,8 +257,7 @@ public class RegulationSearchService {
                     answer,
                     references,
                     confidenceScore,
-                    true
-            );
+                    true);
 
             logger.info("Search completed with {} references, confidence: {}",
                     references.size(), confidenceScore);
@@ -308,7 +314,7 @@ public class RegulationSearchService {
         List<EmbeddingMatch<TextSegment>> relevantSegments = performVectorSearch(
                 query,
                 reRankingInitialResults,
-                minScore  // 낮은 threshold로 넓게 검색
+                minScore // 낮은 threshold로 넓게 검색
         );
 
         logger.info("Stage 1 (Vector Search): Retrieved {} candidates", relevantSegments.size());
@@ -337,8 +343,7 @@ public class RegulationSearchService {
 
         List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(
                 queryEmbedding,
-                maxResults
-        );
+                maxResults);
 
         // 최소 점수 필터링
         matches = matches.stream()
@@ -393,8 +398,7 @@ public class RegulationSearchService {
                         reRankScore,
                         original.embeddingId(),
                         original.embedding(),
-                        original.embedded()
-                );
+                        original.embedded());
                 reRankedResults.add(reRanked);
 
                 // 최소 점수 미만인 경우 카운트
@@ -477,12 +481,14 @@ public class RegulationSearchService {
         logger.info("Extracted {} article references from answer", referencedArticles.size());
 
         // 7. 답변 개선 (후처리 및 포맷팅)
-        String enhancedAnswer = com.guideon.util.AnswerQualityEnhancer.enhanceAnswer(rawAnswer, analysis, referencedArticles);
+        String enhancedAnswer = com.guideon.util.AnswerQualityEnhancer.enhanceAnswer(rawAnswer, analysis,
+                referencedArticles);
         logger.info("Answer enhanced (final length: {} chars)", enhancedAnswer.length());
 
         // 8. 신뢰도 기반 안내 메시지 추가
         double confidenceScore = calculateConfidenceScore(segments);
-        String finalAnswer = com.guideon.util.AnswerQualityEnhancer.addConfidenceIndicator(enhancedAnswer, confidenceScore);
+        String finalAnswer = com.guideon.util.AnswerQualityEnhancer.addConfidenceIndicator(enhancedAnswer,
+                confidenceScore);
 
         logger.info("========================================");
         logger.info("Answer Generation Complete");
@@ -513,11 +519,10 @@ public class RegulationSearchService {
 
             RegulationReference ref = new RegulationReference(
                     regulationType != null ? regulationType : "알 수 없음",
-                    "N/A",  // 조항 번호는 별도 파싱 필요
+                    "N/A", // 조항 번호는 별도 파싱 필요
                     content,
-                    0,      // 페이지 번호는 메타데이터에서 가져와야 함
-                    score
-            );
+                    0, // 페이지 번호는 메타데이터에서 가져와야 함
+                    score);
 
             references.add(ref);
         }
@@ -623,7 +628,8 @@ public class RegulationSearchService {
      */
     private double normalizeRRFScores(List<EmbeddingMatch<TextSegment>> matches) {
         // RRF 점수는 매우 낮으므로 (0.01~0.03), 순위 기반으로 신뢰도 계산
-        if (matches.isEmpty()) return 0.0;
+        if (matches.isEmpty())
+            return 0.0;
 
         // 최상위 결과의 점수가 높으면 신뢰도 높음
         double topScore = matches.get(0).score();
@@ -738,11 +744,10 @@ public class RegulationSearchService {
     private RegulationSearchResult createFallbackResponse() {
         return new RegulationSearchResult(
                 "죄송합니다. 질문하신 내용에 대한 관련 규정을 찾을 수 없습니다. " +
-                "인사팀 또는 관련 부서에 문의해주시기 바랍니다.",
+                        "인사팀 또는 관련 부서에 문의해주시기 바랍니다.",
                 new ArrayList<>(),
                 0.0,
-                false
-        );
+                false);
     }
 
     /**
@@ -753,8 +758,7 @@ public class RegulationSearchService {
                 "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
                 new ArrayList<>(),
                 0.0,
-                false
-        );
+                false);
     }
 
     /**
