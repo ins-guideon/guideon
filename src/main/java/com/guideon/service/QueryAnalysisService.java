@@ -3,6 +3,8 @@ package com.guideon.service;
 import com.guideon.config.ConfigLoader;
 import com.guideon.config.RegulationInferenceConfigLoader;
 import com.guideon.model.QueryAnalysisResult;
+import com.guideon.model.prompt.FewShotExample;
+import com.guideon.util.prompt.FewShotExampleManager;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import org.slf4j.Logger;
@@ -97,9 +99,19 @@ public class QueryAnalysisService {
     }
 
     /**
-     * AI 분석을 위한 프롬프트 생성 (개선된 버전)
+     * AI 분석을 위한 프롬프트 생성 (Few-shot 예제 포함)
      */
     private String buildAnalysisPrompt(String userQuery) {
+        // Few-shot 예제 가져오기 (5-7개)
+        List<FewShotExample> examples = FewShotExampleManager.getQueryAnalysisExamples(7);
+        String examplesText = FewShotExampleManager.formatQueryAnalysisExamples(examples);
+
+        // 의도 목록 가져오기
+        List<String> intents = Arrays.asList(
+                "정보조회", "절차설명", "기준확인", "가능여부", 
+                "예외상황", "계산방법", "권리의무"
+        );
+
         return String.format("""
             당신은 회사 규정 검색 시스템의 질문 분석 전문가입니다.
             사용자의 자연어 질문을 분석하여 다음 정보를 추출해주세요:
@@ -110,19 +122,24 @@ public class QueryAnalysisService {
             KEYWORDS: [쉼표로 구분된 핵심 키워드 목록]
             REGULATION_TYPES: [관련될 것으로 예상되는 규정 유형, 다음 목록에서 선택]
             %s
-            INTENT: [질문 의도: 정보조회/절차안내/기준확인/자격요건/예외사항 중 하나]
+            INTENT: [질문 의도: %s 중 하나]
             SEARCH_QUERY: [검색에 최적화된 쿼리문 - 조사/어미 제거, 핵심 명사만 추출]
 
             중요 규칙:
             1. 규정 유형은 위 목록에서만 선택하고, 관련 없으면 "일반"으로 표시하세요.
             2. 경조사/경조휴가/경조금 관련 질문은 "복리후생비규정"과 "취업규칙"을 포함하세요.
             3. SEARCH_QUERY는 "~에 대한", "~를 알려줘" 등을 제거하고 핵심 키워드만 포함하세요.
+            4. INTENT는 질문의 의도를 정확히 파악하여 선택하세요.
+            5. 아래 예제를 참고하여 동일한 형식으로 답변하세요.
 
-            예시:
-            - 질문: "경조사에 대한 규정을 알려줘"
-            - SEARCH_QUERY: "경조사 경조휴가 경조금"
-            - REGULATION_TYPES: 복리후생비규정, 취업규칙
-            """, userQuery, String.join(", ", regulationTypes));
+            %s
+
+            위 예제들을 참고하여 사용자 질문을 분석해주세요.
+            """, 
+            userQuery, 
+            String.join(", ", regulationTypes),
+            String.join("/", intents),
+            examplesText);
     }
 
     /**

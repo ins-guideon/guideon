@@ -1,8 +1,14 @@
 package com.guideon.util;
 
 import com.guideon.model.QueryAnalysisResult;
+import com.guideon.model.prompt.FewShotExample;
+import com.guideon.model.prompt.IntentMetadata;
+import com.guideon.util.prompt.FewShotExampleManager;
+import com.guideon.util.prompt.PromptMetadataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * LLM 프롬프트 템플릿 관리 클래스
@@ -67,9 +73,21 @@ public class PromptTemplate {
     }
 
     /**
-     * 의도별 구체적인 가이드라인
+     * 의도별 구체적인 가이드라인 (메타데이터 기반)
      */
     private static String getIntentSpecificGuidelines(String intent) {
+        // 메타데이터에서 가이드라인 가져오기
+        IntentMetadata metadata = PromptMetadataManager.getIntentMetadata(intent);
+        if (metadata != null && metadata.getGuidelines() != null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("\n\n[%s 답변 가이드]\n", intent));
+            for (String guideline : metadata.getGuidelines()) {
+                sb.append("- ").append(guideline).append("\n");
+            }
+            return sb.toString();
+        }
+
+        // 메타데이터가 없는 경우 기본 가이드라인 반환
         return switch (intent) {
             case "기준확인" -> """
 
@@ -137,9 +155,25 @@ public class PromptTemplate {
     }
 
     /**
-     * 의도별 답변 예시
+     * 의도별 답변 예시 (Few-shot 예제 기반)
      */
     private static String getIntentExamples(String intent) {
+        // Few-shot 예제 가져오기 (5-7개)
+        List<FewShotExample> examples = FewShotExampleManager.getAnswerGenerationExamples(intent, 7);
+        
+        if (examples == null || examples.isEmpty()) {
+            // 예제가 없는 경우 기본 예제 반환
+            return getDefaultExamples(intent);
+        }
+
+        // Few-shot 예제를 프롬프트 형식으로 변환
+        return FewShotExampleManager.formatAnswerGenerationExamples(examples);
+    }
+
+    /**
+     * 기본 예제 반환 (Few-shot 예제가 없는 경우)
+     */
+    private static String getDefaultExamples(String intent) {
         return switch (intent) {
             case "기준확인" -> """
                 [좋은 답변 예시]
@@ -170,14 +204,14 @@ public class PromptTemplate {
                    - 승인 완료 시 자동으로 근태 시스템에 반영
                    - 긴급한 경우 구두 승인 후 사후 처리 가능
 
-                📋 근태관리규정 제15조 참조
+                📋 취업규칙 제15조 참조
                 """;
 
             case "가능여부" -> """
                 [좋은 답변 예시]
                 네, 연차휴가를 시간 단위로 나누어 사용하는 것이 가능합니다.
 
-                근태관리규정 제16조에 따르면, 연차휴가는 다음과 같이 분할 사용할 수 있습니다:
+                취업규칙 제16조에 따르면, 연차휴가는 다음과 같이 분할 사용할 수 있습니다:
                 - 1일 단위 사용 (기본)
                 - 반일(4시간) 단위 사용
                 - 시간 단위 사용 (최소 1시간, 연간 최대 40시간)
