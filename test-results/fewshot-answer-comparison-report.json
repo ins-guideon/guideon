@@ -1,0 +1,191 @@
+{
+  "comparisonTimestamp" : "2025-11-16T23:49:55.020892",
+  "afterVersion" : "after",
+  "questionComparisons" : [ {
+    "regulationTypes" : {
+      "before" : [ "취업규칙" ],
+      "after" : [ "취업규칙" ]
+    },
+    "question" : "연차 휴가는 몇 일인가요?",
+    "keywords" : {
+      "before" : [ "연차 휴가", "일수" ],
+      "after" : [ "연차", "휴가", "일수" ]
+    },
+    "answer" : {
+      "articleReferences" : {
+        "after" : 1,
+        "improvement" : 0,
+        "before" : 1
+      },
+      "before" : "연차 휴가는 근속년수에 따라 다음과 같이 부여됩니다 (취업규칙 **제32조**).\n\n* ****1년** 근속:** **15일**\n* ****3년** 근속:** **16일**\n* ****5년** 근속:** **17일**\n* 이후 **2년**마다 **1일**씩 추가되며, 최대 **25일**까지 부여됩니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제32조**\n\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 추가 정보가 필요하시면 인사팀에 문의하시기 바랍니다.",
+      "length" : {
+        "before" : 260,
+        "after" : 350
+      },
+      "qualityScore" : {
+        "after" : 0.9,
+        "improvement" : 0.0,
+        "before" : 0.9
+      },
+      "after" : "연차 휴가 일수는 근속년수에 따라 다음과 같이 부여됩니다.\n\n취업규칙 **제32조**에 따르면:\n* ****1년** 근속 시:** **15일**\n* ****3년** 근속 시:** **16일**\n* ****5년** 근속 시:** **17일**\n* **이후 **2년**마다 **1일**씩 추가**되며, 최대 **25일**까지 부여됩니다.\n\n예를 들어, **7년** 근속 시에는 **18일**, **9년** 근속 시에는 **19일**의 연차 휴가가 부여되는 방식입니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제32조**\n\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 추가 정보가 필요하시면 인사팀에 문의하시기 바랍니다."
+    },
+    "searchQuery" : {
+      "before" : "연차 휴가 일수",
+      "after" : "연차 휴가 일수"
+    },
+    "responseTimeMs" : {
+      "before" : 8557,
+      "after" : 8313
+    },
+    "intent" : {
+      "before" : "기준확인",
+      "after" : "기준확인"
+    }
+  }, {
+    "regulationTypes" : {
+      "before" : [ "복리후생비규정", "취업규칙", "사규관리규정" ],
+      "after" : [ "복리후생비규정", "취업규칙" ]
+    },
+    "question" : "경조사에 대한 규정을 알려줘",
+    "keywords" : {
+      "before" : [ "경조사에", "대한", "규정을", "알려줘" ],
+      "after" : [ "경조사", "경조휴가", "경조금" ]
+    },
+    "answer" : {
+      "articleReferences" : {
+        "after" : 2,
+        "improvement" : 2,
+        "before" : 0
+      },
+      "before" : "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      "length" : {
+        "before" : 32,
+        "after" : 449
+      },
+      "qualityScore" : {
+        "after" : 1.0,
+        "improvement" : 0.6,
+        "before" : 0.4
+      },
+      "after" : "경조사 규정은 복리후생비규정에 명시되어 있습니다.\n\n**【경조금】**\n복리후생비규정 **제10조**에 따르면, 경조금 지급 기준은 다음과 같습니다:\n* 본인 결혼: 100만원\n* 자녀 결혼: 50만원\n* 본인/배우자 사망: 200만원\n* 부모 사망: 100만원\n\n**【경조휴가】**\n복리후생비규정 **제12조**에 따르면, 경조휴가는 다음과 같이 부여됩니다:\n* 본인 결혼: **5일**\n* 자녀 결혼: **1일**\n* 본인/배우자 사망: **5일**\n* 부모 사망: **3일**\n\n예를 들어, 본인이 결혼하는 경우 경조금 100만원과 경조휴가 **5일**이 지급되며, 부모님이 사망하신 경우에는 경조금 100만원과 경조휴가 **3일**이 부여됩니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제10조**\n- **제12조**\n\n\n\uD83D\uDCA1 **참고**: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다."
+    },
+    "searchQuery" : {
+      "before" : "경조사 규정",
+      "after" : "경조사 경조휴가 경조금"
+    },
+    "responseTimeMs" : {
+      "before" : 5756,
+      "after" : 14010
+    },
+    "intent" : {
+      "before" : "정보조회",
+      "after" : "정보조회"
+    }
+  }, {
+    "regulationTypes" : {
+      "before" : [ "출장여비지급규정", "경비지급규정" ],
+      "after" : [ "출장여비지급규정" ]
+    },
+    "question" : "출장비 신청은 어떻게 하나요?",
+    "keywords" : {
+      "before" : [ "출장비", "신청" ],
+      "after" : [ "출장비", "신청", "절차" ]
+    },
+    "answer" : {
+      "articleReferences" : {
+        "after" : 0,
+        "improvement" : 0,
+        "before" : 0
+      },
+      "before" : "제공된 규정 내용에는 출장비 신청에 대한 구체적인 절차가 명시되어 있지 않습니다. 따라서 현재 규정만으로는 출장비 신청 방법을 안내해 드리기 어렵습니다.\n\n출장비 신청에 대한 자세한 내용은 관련 부서에 문의하시거나, 별도의 규정 또는 지침이 있는지 확인해 보시는 것이 좋겠습니다.\n\n\uD83D\uDEA8 **경고**: 관련 규정을 찾기 어렵습니다. 반드시 인사팀에 문의하여 정확한 정보를 확인하시기 바랍니다.",
+      "length" : {
+        "before" : 219,
+        "after" : 220
+      },
+      "qualityScore" : {
+        "after" : 0.8,
+        "improvement" : 0.09999999999999998,
+        "before" : 0.7000000000000001
+      },
+      "after" : "제공된 규정 내용에는 출장비 신청에 대한 구체적인 절차가 명시되어 있지 않습니다.\n\n따라서 출장비 신청 절차에 대해 안내해 드릴 수 없습니다.\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 구체적인 절차는 해당 부서 담당자에게 문의하시면 더 자세한 안내를 받으실 수 있습니다.\n\n\uD83D\uDEA8 **경고**: 관련 규정을 찾기 어렵습니다. 반드시 인사팀에 문의하여 정확한 정보를 확인하시기 바랍니다."
+    },
+    "searchQuery" : {
+      "before" : "출장비 신청",
+      "after" : "출장비 신청 절차"
+    },
+    "responseTimeMs" : {
+      "before" : 10204,
+      "after" : 7543
+    },
+    "intent" : {
+      "before" : "절차설명",
+      "after" : "절차설명"
+    }
+  } ],
+  "summaryComparison" : {
+    "before" : {
+      "averageResponseTimeMs" : 8172.333333333333,
+      "averageArticleReferences" : 0.3333333333333333,
+      "averageAnswerLength" : 170.33333333333334,
+      "intentDistribution" : {
+        "절차설명" : 1,
+        "기준확인" : 1,
+        "정보조회" : 1
+      },
+      "totalAnswersGenerated" : 3,
+      "regulationTypeDistribution" : {
+        "경비지급규정" : 1,
+        "취업규칙" : 2,
+        "복리후생비규정" : 1,
+        "사규관리규정" : 1,
+        "출장여비지급규정" : 1
+      },
+      "averageKeywordsPerQuery" : 2.6666666666666665,
+      "averageQualityScore" : 0.6666666666666666,
+      "totalTests" : 3
+    },
+    "after" : {
+      "averageResponseTimeMs" : 9955.333333333334,
+      "averageArticleReferences" : 1.0,
+      "averageAnswerLength" : 339.6666666666667,
+      "intentDistribution" : {
+        "절차설명" : 1,
+        "기준확인" : 1,
+        "정보조회" : 1
+      },
+      "totalAnswersGenerated" : 3,
+      "regulationTypeDistribution" : {
+        "취업규칙" : 2,
+        "복리후생비규정" : 1,
+        "출장여비지급규정" : 1
+      },
+      "averageKeywordsPerQuery" : 3.0,
+      "averageQualityScore" : 0.9,
+      "totalTests" : 3
+    }
+  },
+  "responseTime" : {
+    "before" : 8172.333333333333,
+    "after" : 9955.333333333334,
+    "improvementPercent" : -21.817514377778696
+  },
+  "answerGenerationComparison" : {
+    "averageArticleReferences" : {
+      "after" : 1.0,
+      "improvement" : 0.6666666666666667,
+      "before" : 0.3333333333333333
+    },
+    "averageAnswerLength" : {
+      "after" : 339.6666666666667,
+      "improvementPercent" : 99.41291585127202,
+      "before" : 170.33333333333334
+    },
+    "averageQualityScore" : {
+      "after" : 0.9,
+      "improvement" : 0.2333333333333334,
+      "before" : 0.6666666666666666
+    }
+  },
+  "beforeVersion" : "before",
+  "testName" : "Few-shot 예제 적용 전 (답변 생성)"
+}

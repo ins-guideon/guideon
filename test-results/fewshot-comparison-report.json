@@ -1,175 +1,175 @@
 {
-  "comparisonTimestamp" : "2025-11-16T22:35:09.860022",
+  "comparisonTimestamp" : "2025-11-16T23:48:58.556144",
   "afterVersion" : "after",
   "questionComparisons" : [ {
     "regulationTypes" : {
-      "after" : [ "복리후생비규정", "취업규칙" ],
-      "before" : [ "복리후생비규정", "취업규칙" ]
+      "before" : [ "복리후생비규정", "취업규칙" ],
+      "after" : [ "복리후생비규정", "취업규칙" ]
     },
     "question" : "경조사에 대한 규정을 알려줘",
     "keywords" : {
-      "after" : [ "경조사", "경조휴가", "경조금" ],
-      "before" : [ "경조사", "규정" ]
+      "before" : [ "경조사", "규정" ],
+      "after" : [ "경조사", "경조휴가", "경조금" ]
     },
     "searchQuery" : {
-      "after" : "경조사 경조휴가 경조금",
-      "before" : "경조사"
+      "before" : "경조사 규정",
+      "after" : "경조사 경조휴가 경조금"
     },
     "responseTimeMs" : {
-      "after" : 3440,
-      "before" : 4821
+      "before" : 4991,
+      "after" : 3231
     },
     "intent" : {
-      "after" : "정보조회",
-      "before" : "정보조회"
+      "before" : "정보조회",
+      "after" : "정보조회"
     }
   }, {
     "regulationTypes" : {
-      "after" : [ "취업규칙" ],
-      "before" : [ "취업규칙" ]
+      "before" : [ "취업규칙" ],
+      "after" : [ "취업규칙" ]
     },
     "question" : "연차 휴가는 몇 일인가요?",
     "keywords" : {
-      "after" : [ "연차", "휴가", "일수" ],
-      "before" : [ "연차 휴가", "일수" ]
+      "before" : [ "연차 휴가", "일수" ],
+      "after" : [ "연차", "휴가", "일수" ]
     },
     "searchQuery" : {
-      "after" : "연차 휴가 일수",
-      "before" : "연차 휴가 일수"
+      "before" : "연차 휴가 일수",
+      "after" : "연차 휴가 일수"
     },
     "responseTimeMs" : {
-      "after" : 3073,
-      "before" : 5172
+      "before" : 7105,
+      "after" : 2807
     },
     "intent" : {
-      "after" : "기준확인",
-      "before" : "정보조회"
+      "before" : "기준확인",
+      "after" : "기준확인"
     }
   }, {
     "regulationTypes" : {
-      "after" : [ "출장여비지급규정" ],
-      "before" : [ "출장여비지급규정" ]
+      "before" : [ "출장여비지급규정" ],
+      "after" : [ "출장여비지급규정" ]
     },
     "question" : "출장비 신청은 어떻게 하나요?",
     "keywords" : {
-      "after" : [ "출장비", "신청", "절차" ],
-      "before" : [ "출장비", "신청" ]
+      "before" : [ "출장비", "신청" ],
+      "after" : [ "출장비", "신청", "절차" ]
     },
     "searchQuery" : {
-      "after" : "출장비 신청 절차",
-      "before" : "출장비 신청"
+      "before" : "출장비 신청",
+      "after" : "출장비 신청 절차"
     },
     "responseTimeMs" : {
-      "after" : 3220,
-      "before" : 8333
+      "before" : 2877,
+      "after" : 3281
     },
     "intent" : {
-      "after" : "절차설명",
-      "before" : "절차설명"
+      "before" : "절차설명",
+      "after" : "절차설명"
     }
   }, {
     "regulationTypes" : {
-      "after" : [ "취업규칙" ],
-      "before" : [ "취업규칙" ]
+      "before" : [ "취업규칙", "인사관리규정" ],
+      "after" : [ "취업규칙" ]
     },
     "question" : "연차를 시간 단위로 사용할 수 있나요?",
     "keywords" : {
-      "after" : [ "연차", "시간 단위", "사용" ],
-      "before" : [ "연차", "시간 단위", "사용" ]
+      "before" : [ "연차", "시간 단위", "사용" ],
+      "after" : [ "연차", "시간 단위", "사용" ]
     },
     "searchQuery" : {
-      "after" : "연차 시간 단위 사용",
-      "before" : "연차 시간 단위 사용"
+      "before" : "연차 시간 단위 사용",
+      "after" : "연차 시간 단위 사용"
     },
     "responseTimeMs" : {
-      "after" : 3564,
-      "before" : 3793
+      "before" : 5327,
+      "after" : 3326
     },
     "intent" : {
-      "after" : "가능여부",
-      "before" : "가능여부"
+      "before" : "가능여부",
+      "after" : "가능여부"
     }
   }, {
     "regulationTypes" : {
-      "after" : [ "임원퇴직금지급규정" ],
-      "before" : [ "취업규칙", "인사관리규정" ]
+      "before" : [ "취업규칙", "인사관리규정" ],
+      "after" : [ "임원퇴직금지급규정", "취업규칙" ]
     },
     "question" : "퇴직금은 어떻게 계산하나요?",
     "keywords" : {
-      "after" : [ "퇴직금은", "어떻게", "계산하나요?" ],
-      "before" : [ "퇴직금", "계산" ]
+      "before" : [ "퇴직금", "계산" ],
+      "after" : [ "퇴직금", "계산" ]
     },
     "searchQuery" : {
-      "after" : "퇴직금은 어떻게 계산하나요",
-      "before" : "[퇴직금 계산]"
+      "before" : "퇴직금 계산 방법",
+      "after" : "퇴직금 계산"
     },
     "responseTimeMs" : {
-      "after" : 2448,
-      "before" : 6851
+      "before" : 8364,
+      "after" : 4045
     },
     "intent" : {
-      "after" : "정보조회",
-      "before" : "[계산방법]"
+      "before" : "계산방법",
+      "after" : "계산방법"
     }
   }, {
     "regulationTypes" : {
-      "after" : [ "경비지급규정", "접대비사용규정" ],
-      "before" : [ "경비지급규정" ]
+      "before" : [ "경비지급규정" ],
+      "after" : [ "경비지급규정" ]
     },
     "question" : "경비 지급에서 예외가 되는 경우가 있나요?",
     "keywords" : {
-      "after" : [ "경비", "지급에서", "예외가", "되는", "경우가", "있나요?" ],
-      "before" : [ "경비 지급", "예외" ]
+      "before" : [ "경비 지급", "예외" ],
+      "after" : [ "경비", "지급", "예외" ]
     },
     "searchQuery" : {
-      "after" : "경비 지급에서 예외가 되는 경우가 있나요",
-      "before" : "경비 지급 예외"
+      "before" : "경비 지급 예외",
+      "after" : "경비 지급 예외"
     },
     "responseTimeMs" : {
-      "after" : 2335,
-      "before" : 2928
+      "before" : 2624,
+      "after" : 2698
     },
     "intent" : {
-      "after" : "정보조회",
-      "before" : "예외상황"
+      "before" : "예외상황",
+      "after" : "예외상황"
     }
   }, {
     "regulationTypes" : {
-      "after" : [ "일반" ],
-      "before" : [ "취업규칙", "인재관리규정" ]
+      "before" : [ "취업규칙", "인사관리규정" ],
+      "after" : [ "취업규칙" ]
     },
     "question" : "직원의 권리와 의무는 무엇인가요?",
     "keywords" : {
-      "after" : [ "직원의", "권리와", "의무는", "무엇인가요?" ],
-      "before" : [ "직원", "권리", "의무" ]
+      "before" : [ "직원", "권리", "의무" ],
+      "after" : [ "직원", "권리", "의무" ]
     },
     "searchQuery" : {
-      "after" : "직원의 권리와 의무는 무엇인가요",
-      "before" : "직원 권리 의무"
+      "before" : "[직원 권리 의무]",
+      "after" : "직원 권리 의무"
     },
     "responseTimeMs" : {
-      "after" : 2535,
-      "before" : 5239
+      "before" : 6207,
+      "after" : 6198
     },
     "intent" : {
-      "after" : "정보조회",
-      "before" : "권리의무"
+      "before" : "[권리의무]",
+      "after" : "권리의무"
     }
   } ],
   "summaryComparison" : {
     "before" : {
-      "averageResponseTimeMs" : 5305.285714285715,
+      "averageResponseTimeMs" : 5356.428571428572,
       "intentDistribution" : {
-        "[계산방법]" : 1,
         "절차설명" : 1,
-        "정보조회" : 2,
-        "권리의무" : 1,
+        "기준확인" : 1,
+        "정보조회" : 1,
+        "계산방법" : 1,
         "가능여부" : 1,
-        "예외상황" : 1
+        "예외상황" : 1,
+        "[권리의무]" : 1
       },
       "regulationTypeDistribution" : {
-        "인재관리규정" : 1,
-        "인사관리규정" : 1,
+        "인사관리규정" : 3,
         "경비지급규정" : 1,
         "복리후생비규정" : 1,
         "취업규칙" : 5,
@@ -179,30 +179,31 @@
       "totalTests" : 7
     },
     "after" : {
-      "averageResponseTimeMs" : 2945.0,
+      "averageResponseTimeMs" : 3655.1428571428573,
       "intentDistribution" : {
         "절차설명" : 1,
         "기준확인" : 1,
-        "정보조회" : 4,
-        "가능여부" : 1
+        "정보조회" : 1,
+        "권리의무" : 1,
+        "계산방법" : 1,
+        "가능여부" : 1,
+        "예외상황" : 1
       },
       "regulationTypeDistribution" : {
-        "일반" : 1,
-        "접대비사용규정" : 1,
         "임원퇴직금지급규정" : 1,
         "경비지급규정" : 1,
         "복리후생비규정" : 1,
-        "취업규칙" : 3,
+        "취업규칙" : 5,
         "출장여비지급규정" : 1
       },
-      "averageKeywordsPerQuery" : 3.5714285714285716,
+      "averageKeywordsPerQuery" : 2.857142857142857,
       "totalTests" : 7
     }
   },
   "responseTime" : {
-    "before" : 5305.285714285715,
-    "after" : 2945.0,
-    "improvementPercent" : 44.48932331636912
+    "before" : 5356.428571428572,
+    "after" : 3655.1428571428573,
+    "improvementPercent" : 31.76156820909454
   },
   "beforeVersion" : "before",
   "testName" : "Few-shot 예제 적용 전"

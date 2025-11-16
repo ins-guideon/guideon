@@ -17,6 +17,9 @@ import java.util.List;
 public class PromptTemplate {
 
     private static final Logger logger = LoggerFactory.getLogger(PromptTemplate.class);
+    
+    // Few-shot 예제 사용 여부 (테스트용)
+    private static boolean useFewShotExamples = true;
 
     // 기본 시스템 프롬프트
     private static final String SYSTEM_PROMPT = """
@@ -96,6 +99,8 @@ public class PromptTemplate {
                 - 해당하는 규정 조항(제XX조)을 반드시 언급하세요
                 - 조건이나 예외사항이 있다면 함께 설명하세요
                 - 기준이 여러 경우로 나뉘면 명확히 구분해서 설명하세요
+                - 가능한 경우 구체적인 예시를 들어 설명하세요 (예: "예를 들어, 7년 근속 시에는 18일...")
+                - 답변은 충분히 상세하고 이해하기 쉽게 작성하세요
                 """;
 
             case "절차설명" -> """
@@ -106,6 +111,8 @@ public class PromptTemplate {
                 - 필요한 서류나 준비물이 있다면 언급하세요
                 - 소요 기간이나 처리 시일이 있다면 안내하세요
                 - 주의사항이나 유의할 점이 있다면 강조하세요
+                - 각 단계를 구체적이고 상세하게 설명하여 사용자가 쉽게 따라할 수 있도록 하세요
+                - 가능한 경우 실제 예시를 들어 설명하세요
                 """;
 
             case "가능여부" -> """
@@ -115,6 +122,8 @@ public class PromptTemplate {
                 - 그 근거가 되는 규정 조항을 제시하세요
                 - 조건부로 가능한 경우, 그 조건을 명확히 설명하세요
                 - 예외 상황이 있다면 함께 안내하세요
+                - 가능한 경우 구체적인 예시를 들어 설명하세요
+                - 답변은 충분히 상세하고 이해하기 쉽게 작성하세요
                 """;
 
             case "예외상황" -> """
@@ -124,6 +133,8 @@ public class PromptTemplate {
                 - 예외가 적용되는 조건을 구체적으로 명시하세요
                 - 예외 승인이 필요한 경우 절차를 안내하세요
                 - 유사하지만 다른 상황과 구별하여 설명하세요
+                - 가능한 경우 구체적인 예시를 들어 예외 상황을 설명하세요
+                - 답변은 충분히 상세하고 이해하기 쉽게 작성하세요
                 """;
 
             case "계산방법" -> """
@@ -133,6 +144,8 @@ public class PromptTemplate {
                 - 구체적인 예시를 들어 계산 과정을 보여주세요
                 - 계산에 필요한 값들의 의미를 설명하세요
                 - 반올림이나 소수점 처리 규칙이 있다면 명시하세요
+                - 예시는 실제 숫자를 사용하여 구체적으로 보여주세요
+                - 답변은 충분히 상세하고 이해하기 쉽게 작성하세요
                 """;
 
             case "권리의무" -> """
@@ -142,6 +155,8 @@ public class PromptTemplate {
                 - 권리를 행사하는 방법이나 절차를 안내하세요
                 - 의무를 이행하지 않을 경우의 결과를 설명하세요
                 - 관련 법령이나 상위 규정이 있다면 언급하세요
+                - 가능한 경우 구체적인 예시를 들어 설명하세요
+                - 답변은 충분히 상세하고 이해하기 쉽게 작성하세요
                 """;
 
             default -> """
@@ -150,6 +165,8 @@ public class PromptTemplate {
                 - 질문의 핵심에 초점을 맞춰 답변하세요
                 - 관련된 모든 규정을 종합적으로 고려하여 답변하세요
                 - 추가로 알아두면 유용한 정보가 있다면 함께 안내하세요
+                - 가능한 경우 구체적인 예시를 들어 설명하세요
+                - 답변은 충분히 상세하고 이해하기 쉽게 작성하세요
                 """;
         };
     }
@@ -158,9 +175,14 @@ public class PromptTemplate {
      * 의도별 답변 예시 (Few-shot 예제 기반)
      */
     private static String getIntentExamples(String intent) {
+        // Few-shot 예제 사용 여부 확인
+        if (!useFewShotExamples) {
+            return "";
+        }
+        
         // Few-shot 예제 가져오기 (5-7개)
         List<FewShotExample> examples = FewShotExampleManager.getAnswerGenerationExamples(intent, 7);
-        
+
         if (examples == null || examples.isEmpty()) {
             // 예제가 없는 경우 기본 예제 반환
             return getDefaultExamples(intent);
@@ -168,6 +190,20 @@ public class PromptTemplate {
 
         // Few-shot 예제를 프롬프트 형식으로 변환
         return FewShotExampleManager.formatAnswerGenerationExamples(examples);
+    }
+    
+    /**
+     * 테스트용: Few-shot 예제 사용 여부 설정
+     */
+    public static void setUseFewShotExamples(boolean useFewShotExamples) {
+        PromptTemplate.useFewShotExamples = useFewShotExamples;
+    }
+    
+    /**
+     * Few-shot 예제 사용 여부 확인
+     */
+    public static boolean isUseFewShotExamples() {
+        return useFewShotExamples;
     }
 
     /**

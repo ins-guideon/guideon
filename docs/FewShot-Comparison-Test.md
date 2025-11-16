@@ -31,13 +31,19 @@ Few-shot learning은 LLM에게 예제를 제공하여 원하는 출력 형식과
 6. "경비 지급에서 예외가 되는 경우가 있나요?"
 7. "직원의 권리와 의무는 무엇인가요?"
 
-### 2. 답변 생성 테스트 (PromptTemplate)
+### 2. 답변 생성 테스트 (RegulationSearchService)
 
 #### 측정 항목
+- **답변 품질 점수**: AnswerQualityEnhancer를 통한 품질 점수 (0.0 ~ 1.0)
+  - 답변 길이 평가 (25%)
+  - 규정 조항 참조 평가 (25%)
+  - 부정적 표현 체크 (25%)
+  - 구조화 및 가독성 평가 (25%)
+- **조항 인용 개수**: 답변에 포함된 규정 조항 인용 개수
+- **답변 길이**: 생성된 답변의 문자 수
+- **응답 시간**: 답변 생성에 소요된 시간
 - **답변 형식 일관성**: Few-shot 예제를 통해 일관된 형식의 답변 생성
 - **의도별 답변 품질**: 각 의도에 맞는 최적화된 답변 형식 적용
-- **조항 인용 정확도**: 규정 조항을 정확히 인용하는지
-- **구조화된 답변 생성**: 단계별 설명, 목록 형식 등 구조화된 답변 생성
 
 ### 3. Few-shot 예제 품질 검증
 
@@ -83,6 +89,8 @@ mvn test -Dtest=FewShotComparisonTest#testAnswerGenerationComparison
 mvn test -Dtest=FewShotComparisonTest#testFewShotExampleQuality
 ```
 
+**주의**: 답변 생성 비교 테스트는 실제 LLM API 호출이 필요하므로 API 할당량을 확인하세요.
+
 #### 방법 3: IDE에서 실행
 - IntelliJ IDEA / Eclipse에서 `FewShotComparisonTest.java` 파일 열기
 - 클래스명 옆의 실행 버튼 클릭 또는 개별 테스트 메서드 실행
@@ -93,9 +101,12 @@ mvn test -Dtest=FewShotComparisonTest#testFewShotExampleQuality
 
 ```
 test-results/
-├── fewshot-comparison-before.json    # Few-shot 예제 적용 전 결과
-├── fewshot-comparison-after.json     # Few-shot 예제 적용 후 결과
-└── fewshot-comparison-report.json   # 비교 리포트
+├── fewshot-comparison-before.json              # Few-shot 예제 적용 전 결과 (질문 분석)
+├── fewshot-comparison-after.json               # Few-shot 예제 적용 후 결과 (질문 분석)
+├── fewshot-comparison-report.json              # 질문 분석 비교 리포트
+├── fewshot-answer-comparison-before.json       # Few-shot 예제 적용 전 결과 (답변 생성)
+├── fewshot-answer-comparison-after.json        # Few-shot 예제 적용 후 결과 (답변 생성)
+└── fewshot-answer-comparison-report.json       # 답변 생성 비교 리포트
 ```
 
 ## 📊 테스트 결과 분석
@@ -183,6 +194,74 @@ test-results/
 }
 ```
 
+#### 답변 생성 비교 리포트 (`fewshot-answer-comparison-report.json`)
+
+```json
+{
+  "beforeVersion": "before",
+  "afterVersion": "after",
+  "testName": "Few-shot 예제 적용 전후 비교 (답변 생성)",
+  "questionComparisons": [
+    {
+      "question": "연차 휴가는 몇 일인가요?",
+      "answer": {
+        "before": "답변 텍스트 (Before)",
+        "after": "답변 텍스트 (After)",
+        "length": {
+          "before": 200,
+          "after": 350
+        },
+        "qualityScore": {
+          "before": 0.65,
+          "after": 0.82,
+          "improvement": 0.17
+        },
+        "articleReferences": {
+          "before": 1,
+          "after": 2,
+          "improvement": 1
+        }
+      },
+      "responseTimeMs": {
+        "before": 3000,
+        "after": 3200
+      }
+    }
+  ],
+  "answerGenerationComparison": {
+    "averageAnswerLength": {
+      "before": 250.0,
+      "after": 380.0,
+      "improvementPercent": 52.0
+    },
+    "averageQualityScore": {
+      "before": 0.68,
+      "after": 0.85,
+      "improvement": 0.17
+    },
+    "averageArticleReferences": {
+      "before": 1.2,
+      "after": 2.5,
+      "improvement": 1.3
+    }
+  },
+  "summaryComparison": {
+    "before": {
+      "averageResponseTimeMs": 3000.0,
+      "averageQualityScore": 0.68,
+      "averageArticleReferences": 1.2,
+      "totalAnswersGenerated": 3
+    },
+    "after": {
+      "averageResponseTimeMs": 3200.0,
+      "averageQualityScore": 0.85,
+      "averageArticleReferences": 2.5,
+      "totalAnswersGenerated": 3
+    }
+  }
+}
+```
+
 ### 분석 지표
 
 #### 1. 정확도 개선 지표
@@ -210,9 +289,11 @@ test-results/
 - **의도 분류 정확도**: +25-35% 향상 예상
 
 ### 답변 생성 품질
+- **답변 품질 점수**: +15-25% 향상 예상 (0.65 → 0.80 수준)
+- **조항 인용 개수**: +50-100% 향상 예상 (평균 1개 → 2개)
 - **답변 형식 일관성**: +30-40% 향상 예상
 - **구조화된 답변 생성**: +40-50% 향상 예상
-- **조항 인용 정확도**: +20-30% 향상 예상
+- **답변 길이**: +30-50% 증가 예상 (더 상세한 답변)
 
 ### 성능 영향
 - **응답 시간**: +5-15% 증가 예상 (Few-shot 예제 추가로 인한 토큰 수 증가)

@@ -1,0 +1,76 @@
+{
+  "testName" : "Few-shot 예제 적용 후 (답변 생성)",
+  "version" : "after",
+  "results" : [ {
+    "question" : "연차 휴가는 몇 일인가요?",
+    "analysisResult" : {
+      "originalQuery" : "연차 휴가는 몇 일인가요?",
+      "keywords" : [ "연차", "휴가", "일수" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "기준확인",
+      "searchQuery" : "연차 휴가 일수"
+    },
+    "answer" : "연차 휴가 일수는 근속년수에 따라 다음과 같이 부여됩니다.\n\n취업규칙 **제32조**에 따르면:\n* ****1년** 근속 시:** **15일**\n* ****3년** 근속 시:** **16일**\n* ****5년** 근속 시:** **17일**\n* **이후 **2년**마다 **1일**씩 추가**되며, 최대 **25일**까지 부여됩니다.\n\n예를 들어, **7년** 근속 시에는 **18일**, **9년** 근속 시에는 **19일**의 연차 휴가가 부여되는 방식입니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제32조**\n\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 추가 정보가 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 8313,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 350,
+      "qualityScore" : 0.9
+    },
+    "timestamp" : "2025-11-16T23:49:33.450813"
+  }, {
+    "question" : "경조사에 대한 규정을 알려줘",
+    "analysisResult" : {
+      "originalQuery" : "경조사에 대한 규정을 알려줘",
+      "keywords" : [ "경조사", "경조휴가", "경조금" ],
+      "regulationTypes" : [ "복리후생비규정", "취업규칙" ],
+      "intent" : "정보조회",
+      "searchQuery" : "경조사 경조휴가 경조금"
+    },
+    "answer" : "경조사 규정은 복리후생비규정에 명시되어 있습니다.\n\n**【경조금】**\n복리후생비규정 **제10조**에 따르면, 경조금 지급 기준은 다음과 같습니다:\n* 본인 결혼: 100만원\n* 자녀 결혼: 50만원\n* 본인/배우자 사망: 200만원\n* 부모 사망: 100만원\n\n**【경조휴가】**\n복리후생비규정 **제12조**에 따르면, 경조휴가는 다음과 같이 부여됩니다:\n* 본인 결혼: **5일**\n* 자녀 결혼: **1일**\n* 본인/배우자 사망: **5일**\n* 부모 사망: **3일**\n\n예를 들어, 본인이 결혼하는 경우 경조금 100만원과 경조휴가 **5일**이 지급되며, 부모님이 사망하신 경우에는 경조금 100만원과 경조휴가 **3일**이 부여됩니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제10조**\n- **제12조**\n\n\n\uD83D\uDCA1 **참고**: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 14010,
+    "metadata" : {
+      "articleReferences" : 2,
+      "answerLength" : 449,
+      "qualityScore" : 1.0
+    },
+    "timestamp" : "2025-11-16T23:49:47.46342"
+  }, {
+    "question" : "출장비 신청은 어떻게 하나요?",
+    "analysisResult" : {
+      "originalQuery" : "출장비 신청은 어떻게 하나요?",
+      "keywords" : [ "출장비", "신청", "절차" ],
+      "regulationTypes" : [ "출장여비지급규정" ],
+      "intent" : "절차설명",
+      "searchQuery" : "출장비 신청 절차"
+    },
+    "answer" : "제공된 규정 내용에는 출장비 신청에 대한 구체적인 절차가 명시되어 있지 않습니다.\n\n따라서 출장비 신청 절차에 대해 안내해 드릴 수 없습니다.\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 구체적인 절차는 해당 부서 담당자에게 문의하시면 더 자세한 안내를 받으실 수 있습니다.\n\n\uD83D\uDEA8 **경고**: 관련 규정을 찾기 어렵습니다. 반드시 인사팀에 문의하여 정확한 정보를 확인하시기 바랍니다.",
+    "responseTimeMs" : 7543,
+    "metadata" : {
+      "articleReferences" : 0,
+      "answerLength" : 220,
+      "qualityScore" : 0.8
+    },
+    "timestamp" : "2025-11-16T23:49:55.00696"
+  } ],
+  "summary" : {
+    "averageResponseTimeMs" : 9955.333333333334,
+    "averageArticleReferences" : 1.0,
+    "averageAnswerLength" : 339.6666666666667,
+    "intentDistribution" : {
+      "절차설명" : 1,
+      "기준확인" : 1,
+      "정보조회" : 1
+    },
+    "totalAnswersGenerated" : 3,
+    "regulationTypeDistribution" : {
+      "취업규칙" : 2,
+      "복리후생비규정" : 1,
+      "출장여비지급규정" : 1
+    },
+    "averageKeywordsPerQuery" : 3.0,
+    "averageQualityScore" : 0.9,
+    "totalTests" : 3
+  },
+  "timestamp" : "2025-11-16T23:49:00.617388"
+}
