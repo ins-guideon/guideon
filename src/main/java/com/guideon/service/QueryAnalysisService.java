@@ -24,6 +24,7 @@ public class QueryAnalysisService {
 
     private final ChatLanguageModel chatModel;
     private final List<String> regulationTypes;
+    private boolean useFewShotExamples = true; // Few-shot 예제 사용 여부 (테스트용)
 
     /**
      * application.properties 기반 생성자
@@ -59,6 +60,13 @@ public class QueryAnalysisService {
                 .temperature(0.3)
                 .build();
         this.regulationTypes = getDefaultRegulationTypes();
+    }
+
+    /**
+     * 테스트용: Few-shot 예제 사용 여부 설정
+     */
+    public void setUseFewShotExamples(boolean useFewShotExamples) {
+        this.useFewShotExamples = useFewShotExamples;
     }
 
     // 사규 유형 목록 (CLUADE.md 기반)
@@ -103,7 +111,9 @@ public class QueryAnalysisService {
      */
     private String buildAnalysisPrompt(String userQuery) {
         // Few-shot 예제 가져오기 (5-7개)
-        List<FewShotExample> examples = FewShotExampleManager.getQueryAnalysisExamples(7);
+        List<FewShotExample> examples = useFewShotExamples 
+            ? FewShotExampleManager.getQueryAnalysisExamples(7)
+            : FewShotExampleManager.getEmptyQueryAnalysisExamples();
         String examplesText = FewShotExampleManager.formatQueryAnalysisExamples(examples);
 
         // 의도 목록 가져오기

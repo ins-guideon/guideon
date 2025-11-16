@@ -903,5 +903,19 @@ public class FewShotExampleManager {
                 .filter(e -> e.getId().equals(exampleId))
                 .forEach(e -> e.setUsageFrequency(e.getUsageFrequency() + 1));
     }
+
+    /**
+     * 테스트용: 빈 예제 리스트 반환 (Few-shot 예제 비활성화)
+     */
+    public static List<FewShotExample> getEmptyQueryAnalysisExamples() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * 테스트용: 빈 예제 리스트 반환 (Few-shot 예제 비활성화)
+     */
+    public static List<FewShotExample> getEmptyAnswerGenerationExamples(String intent) {
+        return Collections.emptyList();
+    }
 }
 
