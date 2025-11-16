@@ -12,11 +12,10 @@ import { Dashboard } from './pages/Dashboard';
 import { QAPage } from './pages/QAPage';
 import { DocumentUpload } from './pages/DocumentUpload';
 import { DocumentView } from './pages/DocumentView';
-import { Regulations } from './pages/Regulations';
+import { DocumentManagement } from './pages/DocumentManagement';
 import { History } from './pages/History';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
-import { DocumentUploadDetail } from './pages/DocumentUploadDetail';
 
 // React Query 클라이언트 생성
 const queryClient = new QueryClient({
@@ -58,8 +57,7 @@ function App() {
               <Route path="/qa" element={<QAPage />} />
               <Route path="/documents" element={<DocumentUpload />} />
               <Route path="/documents/view" element={<DocumentView />} />
-              <Route path="/documents/upload/:id" element={<DocumentUploadDetail />} />
-              <Route path="/regulations" element={<Regulations />} />
+              <Route path="/documents/manage" element={<DocumentManagement />} />
               <Route path="/history" element={<History />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />

@@ -2,7 +2,6 @@ import { api } from './api';
 import type {
   ApiResponse,
   RegulationSearchResult,
-  RegulationDocument,
   PaginatedResponse,
   QuestionHistory,
   Statistics,
@@ -19,62 +18,6 @@ export const regulationService = {
       throw new Error(response.error || '질문 처리 중 오류가 발생했습니다.');
     }
     return response.data;
-  },
-
-  // 규정 문서 목록 조회
-  getRegulations: async (params?: {
-    page?: number;
-    pageSize?: number;
-    type?: string;
-  }): Promise<PaginatedResponse<RegulationDocument>> => {
-    const response = await api.get<ApiResponse<PaginatedResponse<RegulationDocument>>>(
-      '/regulations',
-      { params }
-    );
-    if (!response.success || !response.data) {
-      throw new Error(response.error || '규정 목록 조회 중 오류가 발생했습니다.');
-    }
-    return response.data;
-  },
-
-  // 규정 문서 상세 조회
-  getRegulation: async (id: string): Promise<RegulationDocument> => {
-    const response = await api.get<ApiResponse<RegulationDocument>>(
-      `/regulations/${id}`
-    );
-    if (!response.success || !response.data) {
-      throw new Error(response.error || '규정 조회 중 오류가 발생했습니다.');
-    }
-    return response.data;
-  },
-
-  // 규정 문서 업로드
-  uploadRegulation: async (file: File, type: string): Promise<RegulationDocument> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
-
-    const response = await api.post<ApiResponse<RegulationDocument>>(
-      '/regulations/upload',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-    if (!response.success || !response.data) {
-      throw new Error(response.error || '규정 업로드 중 오류가 발생했습니다.');
-    }
-    return response.data;
-  },
-
-  // 규정 문서 삭제
-  deleteRegulation: async (id: string): Promise<void> => {
-    const response = await api.delete<ApiResponse<void>>(`/regulations/${id}`);
-    if (!response.success) {
-      throw new Error(response.error || '규정 삭제 중 오류가 발생했습니다.');
-    }
   },
 
   // 질문 이력 조회

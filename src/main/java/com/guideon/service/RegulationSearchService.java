@@ -783,4 +783,61 @@ public class RegulationSearchService {
         this.embeddingStore = embeddingStore;
         logger.info("Embedding store has been updated");
     }
+
+    /**
+     * 특정 문서의 모든 임베딩 삭제
+     * Vector Store에서 해당 document_id를 가진 모든 세그먼트를 찾아 삭제합니다.
+     *
+     * @param documentId 삭제할 문서 ID
+     * @return 삭제된 임베딩 수
+     */
+    public int deleteDocumentEmbeddings(String documentId) {
+        logger.info("Deleting embeddings for document: {}", documentId);
+
+        int deletedCount = 0;
+
+        try {
+            // InMemoryEmbeddingStore에서 document_id로 필터링하여 삭제
+            // 넓은 범위의 검색을 수행하여 가능한 한 많은 임베딩을 가져옵니다
+            List<String> embeddingIdsToDelete = new ArrayList<>();
+
+            // 모든 임베딩을 검색하기 위해 더미 임베딩 사용
+            // 매우 큰 maxResults로 설정하여 가능한 한 많은 결과 가져오기
+            Embedding dummyEmbedding = embeddingModel.embed("*").content();
+            List<EmbeddingMatch<TextSegment>> allMatches = embeddingStore.findRelevant(
+                    dummyEmbedding,
+                    10000 // 매우 큰 수로 설정하여 가능한 한 많은 결과 가져오기
+            );
+
+            // document_id로 필터링하여 삭제할 embeddingId 수집
+            for (EmbeddingMatch<TextSegment> match : allMatches) {
+                TextSegment segment = match.embedded();
+                String segmentDocumentId = segment.metadata().getString("document_id");
+                if (documentId.equals(segmentDocumentId)) {
+                    String embeddingId = match.embeddingId();
+                    if (embeddingId != null) {
+                        embeddingIdsToDelete.add(embeddingId);
+                    }
+                }
+            }
+
+            // 각 embeddingId로 삭제 수행
+            for (String embeddingId : embeddingIdsToDelete) {
+                try {
+                    embeddingStore.remove(embeddingId);
+                    deletedCount++;
+                } catch (Exception e) {
+                    logger.warn("Failed to remove embedding with id: {}", embeddingId, e);
+                }
+            }
+
+            logger.info("Deleted {} embeddings for document: {}", deletedCount, documentId);
+
+        } catch (Exception e) {
+            logger.error("Error deleting embeddings for document: {}", documentId, e);
+            throw new RuntimeException("임베딩 삭제 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
+
+        return deletedCount;
+    }
 }

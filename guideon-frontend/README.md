@@ -69,22 +69,31 @@ npm run preview
 - AI 답변 및 근거 규정 조회
 - 답변 평가
 
-### 4. 규정 관리 (`/regulations`)
-- 규정 문서 업로드
-- 규정 목록 조회
-- 규정 삭제
+### 4. 문서 업로드 (`/documents`)
+- 문서 파일 업로드 (PDF, DOC, DOCX, TXT)
+- 텍스트 추출 및 확인
+- 확정 및 인덱싱
 
-### 5. 검색 이력 (`/history`)
+### 5. 문서 조회 (`/documents/view`)
+- 업로드된 문서 목록 조회
+- 문서 상세 정보 확인
+
+### 6. 문서 관리 (`/documents/manage`)
+- 문서 목록 조회 및 관리
+- 문서 삭제
+- 새 문서 업로드 페이지로 이동
+
+### 7. 검색 이력 (`/history`)
 - 과거 질문 조회
 - 날짜/유형별 필터링
 - 즐겨찾기 기능
 
-### 6. 통계 (`/analytics`)
+### 8. 통계 (`/analytics`)
 - 일별 질문 추이
 - 규정별 활용도
 - 인기 키워드 분석
 
-### 7. 설정 (`/settings`)
+### 9. 설정 (`/settings`)
 - API 키 설정
 - 모델 선택 (Flash/Pro)
 - 검색 옵션 조정
@@ -102,14 +111,17 @@ src/
 │   ├── Login.tsx
 │   ├── Dashboard.tsx
 │   ├── QAPage.tsx
-│   ├── Regulations.tsx
+│   ├── DocumentUpload.tsx
+│   ├── DocumentView.tsx
+│   ├── DocumentManagement.tsx
 │   ├── History.tsx
 │   ├── Analytics.tsx
 │   └── Settings.tsx
 ├── services/           # API 서비스
 │   ├── api.ts
 │   ├── authService.ts
-│   └── regulationService.ts
+│   ├── regulationService.ts
+│   └── documentService.ts
 ├── stores/             # Zustand 스토어
 │   ├── authStore.ts
 │   └── settingsStore.ts
@@ -153,11 +165,12 @@ server: {
 - `POST /api/qa/history/:id/favorite` - 즐겨찾기 토글
 - `POST /api/qa/history/:id/rate` - 답변 평가
 
-### 규정 관리
-- `GET /api/regulations` - 규정 목록 조회
-- `GET /api/regulations/:id` - 규정 상세 조회
-- `POST /api/regulations/upload` - 규정 업로드
-- `DELETE /api/regulations/:id` - 규정 삭제
+### 문서 관리
+- `GET /api/documents/view` - 문서 목록 조회
+- `GET /api/documents/view/:id` - 문서 상세 조회
+- `POST /api/documents/extract-text` - 텍스트 추출
+- `POST /api/documents/:id/confirm` - 확정 및 인덱싱
+- `DELETE /api/documents/:id` - 문서 삭제
 
 ### 통계
 - `GET /api/statistics` - 통계 데이터 조회

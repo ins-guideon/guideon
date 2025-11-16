@@ -284,6 +284,29 @@ public class HybridSearchService {
     }
 
     /**
+     * 특정 문서의 모든 세그먼트 삭제
+     * BM25 인덱스에서 해당 document_id를 가진 모든 세그먼트를 삭제합니다.
+     *
+     * @param documentId 삭제할 문서 ID
+     * @return 삭제된 세그먼트 수
+     */
+    public int deleteDocumentSegments(String documentId) {
+        if (!enabled) {
+            logger.debug("Hybrid Search disabled, skipping BM25 segment deletion");
+            return 0;
+        }
+
+        try {
+            int deletedCount = bm25SearchService.deleteDocumentSegments(documentId);
+            logger.info("Deleted {} BM25 segments for document: {}", deletedCount, documentId);
+            return deletedCount;
+        } catch (Exception e) {
+            logger.error("Failed to delete BM25 segments for document: {}", documentId, e);
+            throw new RuntimeException("BM25 세그먼트 삭제 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * EmbeddingStore 설정 (RegulationSearchService와 동일한 스토어 공유)
      *
      * @param embeddingStore 공유할 EmbeddingStore

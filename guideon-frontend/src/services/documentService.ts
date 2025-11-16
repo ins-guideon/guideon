@@ -7,13 +7,13 @@ import type {
 } from '@/types';
 
 export const documentService = {
-  // 텍스트 추출 (임시 저장 후 본문 반환)
-  extractText: async (file: File, regulationType: string): Promise<{ id: string; text: string }> => {
+  // 텍스트 추출
+  extractText: async (file: File, regulationType: string): Promise<{ text: string }> => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('regulationType', regulationType);
 
-    const response = await api.post<ApiResponse<{ id: string; text: string }>>(
+    const response = await api.post<ApiResponse<{ text: string }>>(
       '/documents/extract-text',
       formData,
       {
@@ -28,23 +28,12 @@ export const documentService = {
     return response.data;
   },
 
-  // 확정 후 임베딩/메타 저장
-  confirmEmbedding: async (id: string, text: string): Promise<DocumentUploadResponse> => {
-    const response = await api.post<ApiResponse<DocumentUploadResponse>>(
-      `/documents/${id}/confirm`,
-      { text }
-    );
-    if (!response.success || !response.data) {
-      throw new Error(response.error || response.message || '확정 처리 중 오류가 발생했습니다.');
-    }
-    return response.data;
-  },
-
   // 문서 업로드
-  uploadDocument: async (file: File, regulationType: string): Promise<DocumentUploadResponse> => {
+  uploadDocument: async (file: File, regulationType: string, content: string): Promise<DocumentUploadResponse> => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('regulationType', regulationType);
+    formData.append('content', content);
 
     const response = await api.post<ApiResponse<DocumentUploadResponse>>(
       '/documents/upload',
@@ -94,5 +83,35 @@ export const documentService = {
     if (!response.success) {
       throw new Error(response.error || response.message || '문서 삭제 중 오류가 발생했습니다.');
     }
+  },
+
+  // 문서 업데이트
+  updateDocument: async (
+    documentId: string,
+    file: File | null,
+    text: string,
+    regulationType: string
+  ): Promise<DocumentUploadResponse> => {
+    const formData = new FormData();
+    // 파일이 있을 때만 FormData에 추가
+    if (file) {
+      formData.append('file', file);
+    }
+    formData.append('text', text);
+    formData.append('regulationType', regulationType);
+
+    const response = await api.post<ApiResponse<DocumentUploadResponse>>(
+      `/documents/${documentId}/update`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    if (!response.success || !response.data) {
+      throw new Error(response.error || response.message || '문서 업데이트 중 오류가 발생했습니다.');
+    }
+    return response.data;
   },
 };

@@ -10,6 +10,7 @@ import {
   LogoutOutlined,
   UserOutlined,
   EyeOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
@@ -47,10 +48,10 @@ export const MainLayout = () => {
       onClick: () => navigate('/documents/view'),
     },
     {
-      key: '/regulations',
-      icon: <FileTextOutlined />,
-      label: '규정 관리',
-      onClick: () => navigate('/regulations'),
+      key: '/documents/manage',
+      icon: <FolderOutlined />,
+      label: '문서 관리',
+      onClick: () => navigate('/documents/manage'),
     },
     {
       key: '/history',

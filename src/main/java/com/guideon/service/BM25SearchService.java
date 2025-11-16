@@ -100,10 +100,16 @@ public class BM25SearchService {
         // 규정 유형 (저장 + 필터링 가능)
         doc.add(new StringField("regulation_type", regulationType, Field.Store.YES));
 
+        // 문서 ID 필드 추가 (삭제를 위해 필요)
+        String documentId = segment.metadata().getString("document_id");
+        if (documentId != null) {
+            doc.add(new StringField("document_id", documentId, Field.Store.YES));
+        }
+
         indexWriter.addDocument(doc);
 
-        logger.debug("Indexed segment: id={}, type={}, contentLength={}",
-                segmentId, regulationType, segment.text().length());
+        logger.debug("Indexed segment: id={}, type={}, documentId={}, contentLength={}",
+                segmentId, regulationType, documentId, segment.text().length());
     }
 
     /**
@@ -183,6 +189,37 @@ public class BM25SearchService {
             indexWriter.commit();
             logger.info("BM25 index cleared");
         }
+    }
+
+    /**
+     * 특정 문서의 모든 세그먼트 삭제
+     * BM25 인덱스에서 해당 document_id를 가진 모든 세그먼트를 삭제합니다.
+     *
+     * @param documentId 삭제할 문서 ID
+     * @return 삭제된 세그먼트 수
+     */
+    public int deleteDocumentSegments(String documentId) throws IOException {
+        logger.info("Deleting BM25 segments for document: {}", documentId);
+
+        int deletedCount = 0;
+
+        try {
+            // IndexReader 갱신
+            refreshIndexReader();
+
+            // document_id로 검색하여 삭제할 문서 찾기
+            Term term = new Term("document_id", documentId);
+            long deletedLong = indexWriter.deleteDocuments(term);
+            deletedCount = (int) deletedLong;
+
+            logger.info("Deleted {} BM25 segments for document: {}", deletedCount, documentId);
+
+        } catch (Exception e) {
+            logger.error("Error deleting BM25 segments for document: {}", documentId, e);
+            throw new IOException("BM25 인덱스에서 세그먼트 삭제 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
+
+        return deletedCount;
     }
 
     /**

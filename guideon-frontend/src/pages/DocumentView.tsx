@@ -26,10 +26,12 @@ export const DocumentView = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
 
-  // 문서 목록 조회
+  // 문서 목록 조회 - 페이지가 열릴 때마다 항상 최신 데이터를 가져옴
   const { data: documentList, isLoading } = useQuery({
     queryKey: ['documents-view'],
     queryFn: () => documentService.getDocumentsForView(),
+    refetchOnMount: true, // 컴포넌트 마운트 시 항상 재요청
+    staleTime: 0, // 데이터를 즉시 stale로 표시하여 항상 재요청
   });
 
   const handleFileNameClick = async (record: DocumentInfo) => {

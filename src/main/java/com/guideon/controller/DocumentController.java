@@ -4,7 +4,6 @@ import com.guideon.dto.ApiResponse;
 import com.guideon.dto.DocumentListResponse;
 import com.guideon.dto.DocumentUploadResponse;
 import com.guideon.dto.ExtractTextResponse;
-import com.guideon.dto.ConfirmEmbeddingRequest;
 import com.guideon.model.DocumentMetadata;
 import com.guideon.service.DocumentService;
 import com.guideon.service.FileStorageService;
@@ -21,13 +20,13 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -53,20 +52,28 @@ public class DocumentController {
     @Operation(summary = "문서 업로드", description = "PDF, DOC, DOCX, TXT 파일을 업로드하고 벡터 인덱싱을 수행합니다.")
     @PostMapping("/upload")
     public ApiResponse<DocumentUploadResponse> uploadDocument(
-            @Parameter(description = "업로드할 문서 파일", required = true) @RequestParam("file") MultipartFile file,
-            @Parameter(description = "규정 유형 (예: 이사회규정, 접대비사용규정 등)", required = true) @RequestParam("regulationType") String regulationType,
+            @Parameter(required = true) @RequestParam("file") MultipartFile file,
+            @Parameter(required = true) @RequestParam("regulationType") String regulationType,
+            @Parameter(required = true) @RequestParam(value = "content", required = false) String content,
             Authentication authentication) {
 
-        logger.info("문서 업로드 요청: {} (type: {})", file.getOriginalFilename(), regulationType);
+        logger.info("문서 업로드 요청: {} (type: {}, hasContent: {})", file.getOriginalFilename(), regulationType,
+                content != null && !content.isEmpty());
 
         try {
-            // 업로드 디렉토리에 바로 저장 → 텍스트 추출
-            FileStorageService.UploadResult up = fileStorageService.saveToUpload(file, regulationType);
-            String content = textExtractionService.extract(up.getPath());
+            // content가 null이거나 공백이면 예외 발생
+            if (content == null || content.trim().isEmpty()) {
+                throw new IllegalArgumentException("문서 내용(content)이 필수입니다.");
+            }
+
+            String documentId = UUID.randomUUID().toString();
+
+            // 업로드 디렉토리에 파일 저장
+            FileStorageService.UploadResult up = fileStorageService.saveToUpload(file, regulationType, documentId);
 
             // DB 저장 및 인덱싱
-            com.guideon.model.DocumentMetadata saved = documentService.saveAndIndex(
-                    up.getId(),
+            DocumentMetadata saved = documentService.saveAndIndex(
+                    documentId,
                     content,
                     regulationType,
                     up.getOriginalFileName(),
@@ -93,46 +100,19 @@ public class DocumentController {
 
         logger.info("텍스트 추출 요청: {} (type: {})", file.getOriginalFilename(), regulationType);
         try {
-            FileStorageService.TempUploadInfo info = fileStorageService.saveTemp(file, regulationType);
-            String text = textExtractionService.extract(fileStorageService.getTempPath(info.getId()));
-            return ApiResponse.success(new ExtractTextResponse(info.getId(), text));
+            // 파일 유효성 검증
+            fileStorageService.validateFile(file);
+
+            // 텍스트 추출 (MultipartFile 직접 사용)
+            String text = textExtractionService.extract(file);
+
+            return ApiResponse.success(new ExtractTextResponse(text));
         } catch (IllegalArgumentException e) {
             logger.warn("잘못된 텍스트 추출 요청: {}", e.getMessage());
             return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
             logger.error("텍스트 추출 중 오류 발생", e);
             return ApiResponse.error("텍스트 추출 중 오류가 발생했습니다: " + e.getMessage());
-        }
-    }
-
-    @PostMapping("/{uploadId}/confirm")
-    public ApiResponse<DocumentUploadResponse> confirmEmbedding(
-            @PathVariable String uploadId,
-            @RequestBody ConfirmEmbeddingRequest request,
-            Authentication authentication) {
-
-        logger.info("텍스트 확정 및 인덱싱 요청: uploadId={}", uploadId);
-        try {
-            FileStorageService.MoveResult move = fileStorageService.moveToUpload(uploadId);
-            FileStorageService.TempUploadInfo info = move.getInfo();
-            DocumentMetadata saved = documentService.saveAndIndex(
-                    info.getId(),
-                    request.getText(),
-                    info.getRegulationType(),
-                    info.getOriginalFileName(),
-                    move.getFinalFileName(),
-                    info.getFileSize(),
-                    authentication);
-            DocumentUploadResponse response = new DocumentUploadResponse(saved,
-                    "문서가 성공적으로 확정되고 인덱싱되었습니다.");
-            logger.info("확정 및 인덱싱 완료: {} (ID: {})", saved.getFileName(), saved.getId());
-            return ApiResponse.success(response);
-        } catch (IllegalArgumentException e) {
-            logger.warn("잘못된 확정 요청: {}", e.getMessage());
-            return ApiResponse.error(e.getMessage());
-        } catch (Exception e) {
-            logger.error("확정/인덱싱 중 오류 발생", e);
-            return ApiResponse.error("확정/인덱싱 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
@@ -178,6 +158,64 @@ public class DocumentController {
         } catch (Exception e) {
             logger.error("문서 삭제 중 오류 발생", e);
             return ApiResponse.error("문서 삭제 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "문서 업데이트", description = "기존 문서를 삭제하고 새 파일로 업데이트합니다. 파일이 없으면 기존 파일을 유지합니다.")
+    @PostMapping("/{documentId}/update")
+    public ApiResponse<DocumentUploadResponse> updateDocument(
+            @Parameter(required = true) @PathVariable String documentId,
+            @Parameter(required = false) @RequestParam(value = "file", required = false) MultipartFile file,
+            @Parameter(required = true) @RequestParam("text") String text,
+            @Parameter(required = true) @RequestParam("regulationType") String regulationType,
+            Authentication authentication) {
+
+        logger.info("문서 업데이트 요청: {} (type: {}, hasFile: {})", documentId, regulationType,
+                file != null && !file.isEmpty());
+
+        try {
+            // 기존 문서 정보 조회
+            DocumentMetadata metadata = documentService.findById(documentId);
+
+            if (file != null && !file.isEmpty()) {
+                // 기존 파일 삭제
+                fileStorageService.deleteFromUpload(metadata.getStorageFileName());
+
+                // 새 파일 저장
+                FileStorageService.UploadResult uploadResult = fileStorageService.saveToUpload(file, regulationType,
+                        documentId);
+                metadata.setStorageFileName(uploadResult.getSavedFileName());
+                metadata.setFileName(uploadResult.getOriginalFileName());
+                metadata.setFileSize(uploadResult.getFileSize());
+                logger.info("새 파일 저장 완료: {}", metadata.getStorageFileName());
+
+            }
+
+            // 기존 문서 삭제 (임베딩 포함)
+            documentService.deleteById(documentId);
+
+            // 문서 저장 및 인덱싱 (기존 ID 사용)
+            DocumentMetadata saved = documentService.saveAndIndex(
+                    documentId,
+                    text,
+                    regulationType,
+                    metadata.getFileName(),
+                    metadata.getStorageFileName(),
+                    metadata.getFileSize(),
+                    authentication);
+
+            DocumentUploadResponse response = new DocumentUploadResponse(saved,
+                    "문서가 성공적으로 업데이트되고 인덱싱되었습니다.");
+            logger.info("문서 업데이트 완료: {} (ID: {})", saved.getFileName(), saved.getId());
+            return ApiResponse.success(response);
+
+        } catch (IllegalArgumentException e) {
+            logger.warn("잘못된 문서 업데이트 요청: {}", e.getMessage());
+            return ApiResponse.error(e.getMessage());
+
+        } catch (Exception e) {
+            logger.error("문서 업데이트 중 오류 발생", e);
+            return ApiResponse.error("문서 업데이트 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 

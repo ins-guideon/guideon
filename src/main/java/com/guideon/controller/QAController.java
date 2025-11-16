@@ -39,8 +39,8 @@ public class QAController {
     private final QAService qaService;
 
     public QAController(QueryAnalysisService queryAnalysisService,
-                       RegulationSearchService regulationSearchService,
-                       QAService qaService) {
+            RegulationSearchService regulationSearchService,
+            QAService qaService) {
         this.queryAnalysisService = queryAnalysisService;
         this.regulationSearchService = regulationSearchService;
         this.qaService = qaService;
@@ -82,7 +82,7 @@ public class QAController {
             QueryAnalysisResult analysis = queryAnalysisService.analyzeQuery(request.getQuestion());
 
             logger.info("분석 완료 - 키워드: {}, 규정 유형: {}",
-                       analysis.getKeywords(), analysis.getRegulationTypes());
+                    analysis.getKeywords(), analysis.getRegulationTypes());
 
             return ResponseEntity.ok(AnalysisResponse.success(analysis));
 
@@ -112,7 +112,7 @@ public class QAController {
             // 2. RAG 검색 및 답변 생성
             RegulationSearchResult result = regulationSearchService.search(analysis);
             logger.info("검색 완료 - 신뢰도: {}, 참조 문서 수: {}",
-                       result.getConfidenceScore(), result.getReferences().size());
+                    result.getConfidenceScore(), result.getReferences().size());
 
             return ResponseEntity.ok(SearchResponse.success(result));
 
