@@ -20,6 +20,9 @@ public class PromptTemplate {
     
     // Few-shot 예제 사용 여부 (테스트용)
     private static boolean useFewShotExamples = true;
+    
+    // 메타데이터 사용 여부 (테스트용)
+    private static boolean useMetadata = true;
 
     // 기본 시스템 프롬프트
     private static final String SYSTEM_PROMPT = """
@@ -79,6 +82,11 @@ public class PromptTemplate {
      * 의도별 구체적인 가이드라인 (메타데이터 기반)
      */
     private static String getIntentSpecificGuidelines(String intent) {
+        // 메타데이터 비활성화 시 공통 가이드라인만 반환
+        if (!useMetadata) {
+            return "";
+        }
+        
         // 메타데이터에서 가이드라인 가져오기
         IntentMetadata metadata = PromptMetadataManager.getIntentMetadata(intent);
         if (metadata != null && metadata.getGuidelines() != null) {
@@ -204,6 +212,20 @@ public class PromptTemplate {
      */
     public static boolean isUseFewShotExamples() {
         return useFewShotExamples;
+    }
+    
+    /**
+     * 테스트용: 메타데이터 사용 여부 설정
+     */
+    public static void setUseMetadata(boolean useMetadata) {
+        PromptTemplate.useMetadata = useMetadata;
+    }
+    
+    /**
+     * 메타데이터 사용 여부 확인
+     */
+    public static boolean isUseMetadata() {
+        return useMetadata;
     }
 
     /**

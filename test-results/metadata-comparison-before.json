@@ -1,0 +1,208 @@
+{
+  "testName" : "메타데이터 적용 전 (답변 생성)",
+  "version" : "before",
+  "results" : [ {
+    "question" : "직원의 권리와 의무는 무엇인가요?",
+    "analysisResult" : {
+      "originalQuery" : "직원의 권리와 의무는 무엇인가요?",
+      "keywords" : [ "직원", "권리", "의무" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "권리의무",
+      "searchQuery" : "직원 권리 의무"
+    },
+    "answer" : "직원의 권리와 의무는 다음과 같습니다.\n\n취업규칙 **제3조**에 따르면:\n\n**【직원의 권리】**\n**1.** **정당한 임금 수령권**: 근로 계약에 따라 정해진 임금을 지급받을 권리입니다.\n**2.** **휴가 사용권**: 연차휴가, 경조휴가 등 규정에 명시된 휴가를 사용할 권리입니다.\n**3.** **근로 환경 보호권**: 안전하고 쾌적한 환경에서 일할 권리입니다.\n\n**【직원의 의무】**\n**1.** **성실 근무 의무**: 맡은 업무를 성실하게 수행하고 회사의 지시를 따를 의무입니다.\n**2.** **비밀 유지 의무**: 업무상 알게 된 회사의 기밀 정보를 외부에 유출하지 않고 보호할 의무입니다.\n**3.** **회사 재산 보호 의무**: 회사의 자산과 재산을 소중히 다루고 보호할 의무입니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제3조**\n\n\n\uD83D\uDCA1 **참고**: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 12325,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 471,
+      "qualityScore" : 0.9,
+      "intent" : "권리의무"
+    },
+    "timestamp" : "2025-11-19T00:53:10.357768"
+  }, {
+    "question" : "회사의 권리와 의무는 무엇인가요?",
+    "analysisResult" : {
+      "originalQuery" : "회사의 권리와 의무는 무엇인가요?",
+      "keywords" : [ "회사", "권리", "의무" ],
+      "regulationTypes" : [ "일반" ],
+      "intent" : "권리의무",
+      "searchQuery" : "회사 권리 의무"
+    },
+    "answer" : "제공된 규정 내용에서는 회사의 권리와 의무에 대한 구체적인 조항을 찾을 수 없습니다.\n\n취업규칙 **제3조**는 '직원의 권리와 의무'에 대해서만 명시하고 있습니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제3조**\n\n\n\uD83D\uDEA8 **경고**: 관련 규정을 찾기 어렵습니다. 반드시 인사팀에 문의하여 정확한 정보를 확인하시기 바랍니다.",
+    "responseTimeMs" : 15337,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 186,
+      "qualityScore" : 0.6906666666666667,
+      "intent" : "권리의무"
+    },
+    "timestamp" : "2025-11-19T00:53:32.700925"
+  }, {
+    "question" : "직원이 휴가를 거부당할 수 있나요?",
+    "analysisResult" : {
+      "originalQuery" : "직원이 휴가를 거부당할 수 있나요?",
+      "keywords" : [ "직원", "휴가", "거부" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "가능여부",
+      "searchQuery" : "직원 휴가 거부"
+    },
+    "answer" : "제공된 규정 내용에 따르면, 직원은 휴가를 사용할 권리가 명시되어 있으며, 휴가 신청이 거부될 수 있다는 내용은 확인되지 않습니다.\n\n취업규칙 **제3조** (직원의 권리와 의무)에 따르면, 직원은 '휴가 사용권'을 가집니다. 현재 제공된 규정 내용에는 직원의 휴가 신청을 회사가 거부할 수 있다는 조항은 명시되어 있지 않습니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제3조**\n\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 개별 상황에 따라 예외가 있을 수 있으니, 정확한 판단은 인사팀과 상담하시기 바랍니다.\n\n\uD83D\uDEA8 **경고**: 관련 규정을 찾기 어렵습니다. 반드시 인사팀에 문의하여 정확한 정보를 확인하시기 바랍니다.",
+    "responseTimeMs" : 18059,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 356,
+      "qualityScore" : 0.9,
+      "intent" : "가능여부"
+    },
+    "timestamp" : "2025-11-19T00:53:57.764976"
+  }, {
+    "question" : "회사가 임금을 지급하지 않으면 어떻게 하나요?",
+    "analysisResult" : {
+      "originalQuery" : "회사가 임금을 지급하지 않으면 어떻게 하나요?",
+      "keywords" : [ "임금", "미지급", "회사" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "권리의무",
+      "searchQuery" : "임금 미지급"
+    },
+    "answer" : "제공된 규정 내용에는 회사가 임금을 지급하지 않을 경우 직원이 취할 수 있는 구체적인 조치나 관련 절차에 대한 내용이 명시되어 있지 않습니다.\n\n⚠️ **주의**: 검색 결과의 관련도가 낮을 수 있습니다. 정확한 정보는 인사팀에 확인하시기 바랍니다.",
+    "responseTimeMs" : 14744,
+    "metadata" : {
+      "articleReferences" : 0,
+      "answerLength" : 139,
+      "qualityScore" : 0.6593333333333333,
+      "intent" : "권리의무"
+    },
+    "timestamp" : "2025-11-19T00:54:19.514099"
+  }, {
+    "question" : "경비 지급에서 예외가 되는 경우가 있나요?",
+    "analysisResult" : {
+      "originalQuery" : "경비 지급에서 예외가 되는 경우가 있나요?",
+      "keywords" : [ "경비", "지급", "예외" ],
+      "regulationTypes" : [ "경비지급규정" ],
+      "intent" : "예외상황",
+      "searchQuery" : "경비 지급 예외"
+    },
+    "answer" : "네, 경비 지급에서 예외가 되는 경우가 있습니다.\n\n경비지급규정 **제7조**에 따르면, 다음의 경우 경비 지급이 제한되거나 불가능합니다:\n\n**1.** **증빙서류 미제출**: 경비 사용에 대한 증빙서류를 제출하지 않은 경우 경비 지급이 제한됩니다.\n**2.** **개인 용도 지출**: 업무와 관련 없는 개인적인 용도로 지출한 비용은 경비로 지급되지 않습니다.\n**3.** **한도 초과**: 정해진 경비 한도를 초과하여 지출한 경우, 초과분에 대한 경비 지급이 제한됩니다. 다만, 사전에 승인을 받은 경우에는 예외적으로 지급될 수 있습니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제7조**\n",
+    "responseTimeMs" : 8048,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 336,
+      "qualityScore" : 0.7,
+      "intent" : "예외상황"
+    },
+    "timestamp" : "2025-11-19T00:54:34.566648"
+  }, {
+    "question" : "연차 사용에 예외가 있나요?",
+    "analysisResult" : {
+      "originalQuery" : "연차 사용에 예외가 있나요?",
+      "keywords" : [ "연차", "사용", "예외" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "예외상황",
+      "searchQuery" : "연차 사용 예외"
+    },
+    "answer" : "제공된 규정 내용에 따르면 연차휴가 사용에 대한 예외 사항은 명시되어 있지 않습니다.\n\n취업규칙 **제32조**는 연차휴가 부여 기준을, **제16조**는 연차휴가 사용 단위를, **제33조**는 연차휴가 이월에 대해 규정하고 있습니다. 이 외에 연차휴가 사용을 제한하거나 예외를 두는 내용은 확인되지 않습니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제32조**\n- **제16조**\n- **제33조**\n\n\n\uD83D\uDCA1 **참고**: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 8310,
+    "metadata" : {
+      "articleReferences" : 3,
+      "answerLength" : 270,
+      "qualityScore" : 1.0,
+      "intent" : "예외상황"
+    },
+    "timestamp" : "2025-11-19T00:54:49.882173"
+  }, {
+    "question" : "출장비 정산에 예외가 있나요?",
+    "analysisResult" : {
+      "originalQuery" : "출장비 정산에 예외가 있나요?",
+      "keywords" : [ "출장비", "정산", "예외" ],
+      "regulationTypes" : [ "출장여비지급규정" ],
+      "intent" : "예외상황",
+      "searchQuery" : "출장비 정산 예외"
+    },
+    "answer" : "네, 출장비 정산에 예외가 있습니다.\n\n경비지급규정 **제7조**에 따르면, 다음의 경우 경비 지급이 제한되거나 불가능합니다:\n\n**1.** **증빙서류 미제출**\n * 출장비 정산 시 필요한 영수증이나 기타 증빙서류를 제출하지 않으면 해당 경비의 지급이 제한되거나 불가능합니다.\n\n**2.** **개인 용도 지출**\n * 업무와 관련 없는 개인적인 용도로 지출된 비용은 출장비로 정산하여 지급받을 수 없습니다.\n\n**3.** **한도 초과**\n * 규정된 출장비 한도를 초과하여 지출된 금액은 지급이 제한될 수 있습니다. 다만, 사전에 승인을 받은 경우에는 예외적으로 지급이 가능합니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제7조**\n\n\n\uD83D\uDCA1 **참고**: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 11636,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 402,
+      "qualityScore" : 0.7,
+      "intent" : "예외상황"
+    },
+    "timestamp" : "2025-11-19T00:55:08.523714"
+  }, {
+    "question" : "경조휴가 사용에 예외가 있나요?",
+    "analysisResult" : {
+      "originalQuery" : "경조휴가 사용에 예외가 있나요?",
+      "keywords" : [ "경조휴가", "사용", "예외" ],
+      "regulationTypes" : [ "복리후생비규정", "취업규칙" ],
+      "intent" : "예외상황",
+      "searchQuery" : "경조휴가 사용 예외"
+    },
+    "answer" : "네, 경조휴가 사용에는 조건이 있으며, 이 조건이 충족되지 않을 경우 사용이 제한될 수 있습니다.\n\n복리후생비규정 **제16조** (경조휴가 신청)에 따르면, 경조휴가 신청 절차를 따르지 않을 경우 휴가 사용이 어려울 수 있습니다. 구체적인 경우는 다음과 같습니다:\n\n**1.** **즉시 신청 미이행**\n * 경조사 발생 시 즉시 신청하지 않은 경우 휴가 사용이 제한될 수 있습니다.\n\n**2.** **증빙서류 미제출**\n * 필요한 증빙서류를 제출하지 않으면 휴가 사용이 불가합니다.\n\n**3.** **사용 기한 초과**\n * 휴가 승인일로부터 **30일** 이내에 사용하지 않은 경우 휴가가 소멸될 수 있습니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제16조**\n\n\n\uD83D\uDCA1 **참고**: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 20439,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 419,
+      "qualityScore" : 0.9,
+      "intent" : "예외상황"
+    },
+    "timestamp" : "2025-11-19T00:55:35.966824"
+  }, {
+    "question" : "연차 휴가는 몇 일인가요?",
+    "analysisResult" : {
+      "originalQuery" : "연차 휴가는 몇 일인가요?",
+      "keywords" : [ "연차", "휴가", "일수" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "기준확인",
+      "searchQuery" : "연차 휴가 일수"
+    },
+    "answer" : "연차 휴가 일수는 근속년수에 따라 다음과 같이 부여됩니다.\n\n취업규칙 **제32조**에 따르면:\n* **1년** 근속: **15일**\n* **3년** 근속: **16일**\n* **5년** 근속: **17일**\n* 이후 **2년**마다 **1일**씩 가산 (최대 **25일**)\n\n예를 들어, **7년** 근속 시에는 **18일**, **9년** 근속 시에는 **19일**의 연차 휴가가 부여되는 방식입니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제32조**\n\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 추가 정보가 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 15002,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 318,
+      "qualityScore" : 0.9,
+      "intent" : "기준확인"
+    },
+    "timestamp" : "2025-11-19T00:55:57.974556"
+  }, {
+    "question" : "경조금은 얼마나 받을 수 있나요?",
+    "analysisResult" : {
+      "originalQuery" : "경조금은 얼마나 받을 수 있나요?",
+      "keywords" : [ "경조금", "금액" ],
+      "regulationTypes" : [ "복리후생비규정", "취업규칙" ],
+      "intent" : "기준확인",
+      "searchQuery" : "경조금 금액"
+    },
+    "answer" : "경조금 지급 기준은 다음과 같습니다.\n\n복리후생비규정 **제10조**에 따르면:\n* 본인 결혼: 100만원\n* 자녀 결혼: 50만원\n* 본인 또는 배우자 사망: 200만원\n* 부모 사망: 100만원\n\n예를 들어, 본인이 결혼하는 경우 100만원의 경조금이 지급되며, 본인 또는 배우자가 사망한 경우에는 200만원이 지급됩니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제10조**\n\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 추가 정보가 필요하시면 인사팀에 문의하시기 바랍니다.\n\n\uD83D\uDCA1 **참고**: 추가 확인이 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 18506,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 315,
+      "qualityScore" : 0.9,
+      "intent" : "기준확인"
+    },
+    "timestamp" : "2025-11-19T00:56:23.501361"
+  } ],
+  "summary" : {
+    "averageResponseTimeMs" : 14240.6,
+    "averageArticleReferences" : 1.1,
+    "averageAnswerLength" : 321.2,
+    "intentDistribution" : {
+      "기준확인" : 2,
+      "권리의무" : 3,
+      "가능여부" : 1,
+      "예외상황" : 4
+    },
+    "totalAnswersGenerated" : 10,
+    "regulationTypeDistribution" : {
+      "일반" : 1,
+      "경비지급규정" : 1,
+      "취업규칙" : 7,
+      "출장여비지급규정" : 1,
+      "복리후생비규정" : 2
+    },
+    "averageKeywordsPerQuery" : 2.9,
+    "averageQualityScore" : 0.825,
+    "totalTests" : 10
+  },
+  "timestamp" : "2025-11-19T00:52:58.030601"
+}
