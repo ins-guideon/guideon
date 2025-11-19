@@ -67,6 +67,15 @@ public class AuthService {
         return toDTO(user);
     }
 
+    @Transactional
+    public UserDTO promoteToAdmin(String username) {
+        UserAccount user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        user.setRole(Role.ADMIN);
+        return toDTO(user);
+    }
+
     private UserDTO toDTO(UserAccount user) {
         return new UserDTO(
                 String.valueOf(user.getId()),

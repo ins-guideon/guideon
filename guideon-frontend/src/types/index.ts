@@ -115,6 +115,7 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
+  errors?: Record<string, string>;
 }
 
 // 페이지네이션

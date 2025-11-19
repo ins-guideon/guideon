@@ -60,4 +60,17 @@ public class AuthController {
         logger.info("현재 사용자 정보 조회 요청");
         return ApiResponse.success(authService.getCurrentUser(authentication.getName()));
     }
+
+    @Operation(summary = "관리자 권한 부여 (테스트용)", description = "특정 사용자의 권한을 ADMIN으로 변경합니다.")
+    @PostMapping("/promote")
+    public ApiResponse<UserDTO> promoteToAdmin(@RequestParam String username) {
+        logger.info("관리자 권한 부여 요청: username={}", username);
+        try {
+            UserDTO user = authService.promoteToAdmin(username);
+            return ApiResponse.success(user);
+        } catch (Exception e) {
+            logger.warn("관리자 권한 부여 실패: username={}, error={}", username, e.getMessage());
+            return ApiResponse.error(e.getMessage());
+        }
+    }
 }

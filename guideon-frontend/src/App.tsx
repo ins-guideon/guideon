@@ -55,9 +55,23 @@ function App() {
             >
               <Route path="/" element={<Dashboard />} />
               <Route path="/qa" element={<QAPage />} />
-              <Route path="/documents" element={<DocumentUpload />} />
+              <Route
+                path="/documents"
+                element={
+                  <PrivateRoute roles={['ADMIN']}>
+                    <DocumentUpload />
+                  </PrivateRoute>
+                }
+              />
               <Route path="/documents/view" element={<DocumentView />} />
-              <Route path="/documents/manage" element={<DocumentManagement />} />
+              <Route
+                path="/documents/manage"
+                element={
+                  <PrivateRoute roles={['ADMIN']}>
+                    <DocumentManagement />
+                  </PrivateRoute>
+                }
+              />
               <Route path="/history" element={<History />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />

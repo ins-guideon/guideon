@@ -35,24 +35,32 @@ export const MainLayout = () => {
       label: '질문하기',
       onClick: () => navigate('/qa'),
     },
-    {
-      key: '/documents',
-      icon: <UploadOutlined />,
-      label: '문서 업로드',
-      onClick: () => navigate('/documents'),
-    },
+    ...(user?.role === 'ADMIN'
+      ? [
+          {
+            key: '/documents',
+            icon: <UploadOutlined />,
+            label: '문서 업로드',
+            onClick: () => navigate('/documents'),
+          },
+        ]
+      : []),
     {
       key: '/documents/view',
       icon: <EyeOutlined />,
       label: '문서 조회',
       onClick: () => navigate('/documents/view'),
     },
-    {
-      key: '/documents/manage',
-      icon: <FolderOutlined />,
-      label: '문서 관리',
-      onClick: () => navigate('/documents/manage'),
-    },
+    ...(user?.role === 'ADMIN'
+      ? [
+          {
+            key: '/documents/manage',
+            icon: <FolderOutlined />,
+            label: '문서 관리',
+            onClick: () => navigate('/documents/manage'),
+          },
+        ]
+      : []),
     {
       key: '/history',
       icon: <HistoryOutlined />,

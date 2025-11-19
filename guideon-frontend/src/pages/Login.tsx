@@ -8,6 +8,7 @@ export const Login = () => {
   const navigate = useNavigate();
   const { login, isLoading } = useAuthStore();
   const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
 
   const onFinish = async (values: {
     username: string;
@@ -16,16 +17,18 @@ export const Login = () => {
   }) => {
     try {
       await login(values.username, values.password, values.rememberMe);
-      message.success('로그인에 성공했습니다.');
+      messageApi.success('로그인에 성공했습니다.');
       navigate('/');
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '로그인에 실패했습니다.');
+      messageApi.error(error instanceof Error ? error.message : '로그인에 실패했습니다.');
     }
   };
 
   return (
-    <div
-      style={{
+    <>
+      {contextHolder}
+      <div
+        style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -95,5 +98,6 @@ export const Login = () => {
         </Form>
       </Card>
     </div>
+    </>
   );
 };

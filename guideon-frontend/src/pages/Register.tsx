@@ -8,6 +8,7 @@ export const Register = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const onFinish = async (values: {
     username: string;
@@ -18,18 +19,20 @@ export const Register = () => {
     setIsLoading(true);
     try {
       await authService.register(values);
-      message.success('회원가입이 완료되었습니다. 로그인해주세요.');
+      messageApi.success('회원가입이 완료되었습니다. 로그인해주세요.');
       navigate('/login');
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '회원가입에 실패했습니다.');
+      messageApi.error(error instanceof Error ? error.message : '회원가입에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
+    <>
+      {contextHolder}
+      <div
+        style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -53,7 +56,13 @@ export const Register = () => {
             <Input prefix={<UserOutlined />} placeholder="아이디" />
           </Form.Item>
 
-          <Form.Item name="password" rules={[{ required: true, message: '비밀번호를 입력해주세요.' }]}>
+          <Form.Item
+            name="password"
+            rules={[
+              { required: true, message: '비밀번호를 입력해주세요.' },
+              { min: 6, message: '비밀번호는 최소 6자 이상이어야 합니다.' },
+            ]}
+          >
             <Input.Password prefix={<LockOutlined />} placeholder="비밀번호" />
           </Form.Item>
 
@@ -73,6 +82,7 @@ export const Register = () => {
         </Form>
       </Card>
     </div>
+    </>
   );
 };
 

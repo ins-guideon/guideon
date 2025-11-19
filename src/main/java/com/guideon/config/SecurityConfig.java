@@ -36,6 +36,7 @@ public class SecurityConfig {
                     "/actuator/**",
                     "/api/auth/login",
                     "/api/auth/register",
+                    "/api/auth/promote",
                     "/h2-console/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
