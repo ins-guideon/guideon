@@ -1,0 +1,118 @@
+{
+  "testName" : "Few-shot 예제 적용 후",
+  "version" : "after",
+  "results" : [ {
+    "question" : "경조사에 대한 규정을 알려줘",
+    "analysisResult" : {
+      "originalQuery" : "경조사에 대한 규정을 알려줘",
+      "keywords" : [ "경조사", "경조휴가", "경조금" ],
+      "regulationTypes" : [ "복리후생비규정", "취업규칙" ],
+      "intent" : "정보조회",
+      "searchQuery" : "경조사 경조휴가 경조금"
+    },
+    "answer" : null,
+    "responseTimeMs" : 3231,
+    "metadata" : { },
+    "timestamp" : "2025-11-16T23:48:36.142993"
+  }, {
+    "question" : "연차 휴가는 몇 일인가요?",
+    "analysisResult" : {
+      "originalQuery" : "연차 휴가는 몇 일인가요?",
+      "keywords" : [ "연차", "휴가", "일수" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "기준확인",
+      "searchQuery" : "연차 휴가 일수"
+    },
+    "answer" : null,
+    "responseTimeMs" : 2807,
+    "metadata" : { },
+    "timestamp" : "2025-11-16T23:48:38.950155"
+  }, {
+    "question" : "출장비 신청은 어떻게 하나요?",
+    "analysisResult" : {
+      "originalQuery" : "출장비 신청은 어떻게 하나요?",
+      "keywords" : [ "출장비", "신청", "절차" ],
+      "regulationTypes" : [ "출장여비지급규정" ],
+      "intent" : "절차설명",
+      "searchQuery" : "출장비 신청 절차"
+    },
+    "answer" : null,
+    "responseTimeMs" : 3281,
+    "metadata" : { },
+    "timestamp" : "2025-11-16T23:48:42.231525"
+  }, {
+    "question" : "연차를 시간 단위로 사용할 수 있나요?",
+    "analysisResult" : {
+      "originalQuery" : "연차를 시간 단위로 사용할 수 있나요?",
+      "keywords" : [ "연차", "시간 단위", "사용" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "가능여부",
+      "searchQuery" : "연차 시간 단위 사용"
+    },
+    "answer" : null,
+    "responseTimeMs" : 3326,
+    "metadata" : { },
+    "timestamp" : "2025-11-16T23:48:45.557186"
+  }, {
+    "question" : "퇴직금은 어떻게 계산하나요?",
+    "analysisResult" : {
+      "originalQuery" : "퇴직금은 어떻게 계산하나요?",
+      "keywords" : [ "퇴직금", "계산" ],
+      "regulationTypes" : [ "임원퇴직금지급규정", "취업규칙" ],
+      "intent" : "계산방법",
+      "searchQuery" : "퇴직금 계산"
+    },
+    "answer" : null,
+    "responseTimeMs" : 4045,
+    "metadata" : { },
+    "timestamp" : "2025-11-16T23:48:49.602414"
+  }, {
+    "question" : "경비 지급에서 예외가 되는 경우가 있나요?",
+    "analysisResult" : {
+      "originalQuery" : "경비 지급에서 예외가 되는 경우가 있나요?",
+      "keywords" : [ "경비", "지급", "예외" ],
+      "regulationTypes" : [ "경비지급규정" ],
+      "intent" : "예외상황",
+      "searchQuery" : "경비 지급 예외"
+    },
+    "answer" : null,
+    "responseTimeMs" : 2698,
+    "metadata" : { },
+    "timestamp" : "2025-11-16T23:48:52.300224"
+  }, {
+    "question" : "직원의 권리와 의무는 무엇인가요?",
+    "analysisResult" : {
+      "originalQuery" : "직원의 권리와 의무는 무엇인가요?",
+      "keywords" : [ "직원", "권리", "의무" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "권리의무",
+      "searchQuery" : "직원 권리 의무"
+    },
+    "answer" : null,
+    "responseTimeMs" : 6198,
+    "metadata" : { },
+    "timestamp" : "2025-11-16T23:48:58.498588"
+  } ],
+  "summary" : {
+    "averageResponseTimeMs" : 3655.1428571428573,
+    "intentDistribution" : {
+      "절차설명" : 1,
+      "기준확인" : 1,
+      "정보조회" : 1,
+      "권리의무" : 1,
+      "계산방법" : 1,
+      "가능여부" : 1,
+      "예외상황" : 1
+    },
+    "regulationTypeDistribution" : {
+      "임원퇴직금지급규정" : 1,
+      "경비지급규정" : 1,
+      "복리후생비규정" : 1,
+      "취업규칙" : 5,
+      "출장여비지급규정" : 1
+    },
+    "averageKeywordsPerQuery" : 2.857142857142857,
+    "totalTests" : 7
+  },
+  "timestamp" : "2025-11-16T23:47:13.388166"
+}

@@ -1,0 +1,78 @@
+{
+  "testName" : "Few-shot 예제 적용 전 (답변 생성)",
+  "version" : "before",
+  "results" : [ {
+    "question" : "연차 휴가는 몇 일인가요?",
+    "analysisResult" : {
+      "originalQuery" : "연차 휴가는 몇 일인가요?",
+      "keywords" : [ "연차 휴가", "일수" ],
+      "regulationTypes" : [ "취업규칙" ],
+      "intent" : "기준확인",
+      "searchQuery" : "연차 휴가 일수"
+    },
+    "answer" : "연차 휴가는 근속년수에 따라 다음과 같이 부여됩니다 (취업규칙 **제32조**).\n\n* ****1년** 근속:** **15일**\n* ****3년** 근속:** **16일**\n* ****5년** 근속:** **17일**\n* 이후 **2년**마다 **1일**씩 추가되며, 최대 **25일**까지 부여됩니다.\n\n---\n\n### \uD83D\uDCCB 참조 조항\n\n- **제32조**\n\n\n---\n\n> \uD83D\uDCA1 **추가 안내**\n> \n> \uD83D\uDCA1 추가 정보가 필요하시면 인사팀에 문의하시기 바랍니다.",
+    "responseTimeMs" : 8557,
+    "metadata" : {
+      "articleReferences" : 1,
+      "answerLength" : 260,
+      "qualityScore" : 0.9
+    },
+    "timestamp" : "2025-11-16T23:49:09.175741"
+  }, {
+    "question" : "경조사에 대한 규정을 알려줘",
+    "analysisResult" : {
+      "originalQuery" : "경조사에 대한 규정을 알려줘",
+      "keywords" : [ "경조사에", "대한", "규정을", "알려줘" ],
+      "regulationTypes" : [ "복리후생비규정", "취업규칙", "사규관리규정" ],
+      "intent" : "정보조회",
+      "searchQuery" : "경조사 규정"
+    },
+    "answer" : "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    "responseTimeMs" : 5756,
+    "metadata" : {
+      "articleReferences" : 0,
+      "answerLength" : 32,
+      "qualityScore" : 0.4
+    },
+    "timestamp" : "2025-11-16T23:49:14.932403"
+  }, {
+    "question" : "출장비 신청은 어떻게 하나요?",
+    "analysisResult" : {
+      "originalQuery" : "출장비 신청은 어떻게 하나요?",
+      "keywords" : [ "출장비", "신청" ],
+      "regulationTypes" : [ "출장여비지급규정", "경비지급규정" ],
+      "intent" : "절차설명",
+      "searchQuery" : "출장비 신청"
+    },
+    "answer" : "제공된 규정 내용에는 출장비 신청에 대한 구체적인 절차가 명시되어 있지 않습니다. 따라서 현재 규정만으로는 출장비 신청 방법을 안내해 드리기 어렵습니다.\n\n출장비 신청에 대한 자세한 내용은 관련 부서에 문의하시거나, 별도의 규정 또는 지침이 있는지 확인해 보시는 것이 좋겠습니다.\n\n\uD83D\uDEA8 **경고**: 관련 규정을 찾기 어렵습니다. 반드시 인사팀에 문의하여 정확한 정보를 확인하시기 바랍니다.",
+    "responseTimeMs" : 10204,
+    "metadata" : {
+      "articleReferences" : 0,
+      "answerLength" : 219,
+      "qualityScore" : 0.7000000000000001
+    },
+    "timestamp" : "2025-11-16T23:49:25.137138"
+  } ],
+  "summary" : {
+    "averageResponseTimeMs" : 8172.333333333333,
+    "averageArticleReferences" : 0.3333333333333333,
+    "averageAnswerLength" : 170.33333333333334,
+    "intentDistribution" : {
+      "절차설명" : 1,
+      "기준확인" : 1,
+      "정보조회" : 1
+    },
+    "totalAnswersGenerated" : 3,
+    "regulationTypeDistribution" : {
+      "경비지급규정" : 1,
+      "취업규칙" : 2,
+      "복리후생비규정" : 1,
+      "사규관리규정" : 1,
+      "출장여비지급규정" : 1
+    },
+    "averageKeywordsPerQuery" : 2.6666666666666665,
+    "averageQualityScore" : 0.6666666666666666,
+    "totalTests" : 3
+  },
+  "timestamp" : "2025-11-16T23:49:00.617371"
+}
