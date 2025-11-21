@@ -1,6 +1,7 @@
 package com.guideon.service;
 
 import com.guideon.config.ConfigLoader;
+import com.guideon.model.DocumentMetadata;
 import com.guideon.model.ScoredSegment;
 import com.guideon.util.LuceneAnalyzerFactory;
 import com.guideon.util.SearchResultConverter;
@@ -98,12 +99,17 @@ public class BM25SearchService {
         doc.add(new TextField("content", segment.text(), Field.Store.YES));
 
         // 규정 유형 (저장 + 필터링 가능)
-        doc.add(new StringField("regulation_type", regulationType, Field.Store.YES));
+        doc.add(new StringField(DocumentMetadata.REGULATION_TYPE, regulationType, Field.Store.YES));
 
         // 문서 ID 필드 추가 (삭제를 위해 필요)
-        String documentId = segment.metadata().getString("document_id");
+        String documentId = segment.metadata().getString(DocumentMetadata.DOCUMENT_ID);
         if (documentId != null) {
-            doc.add(new StringField("document_id", documentId, Field.Store.YES));
+            doc.add(new StringField(DocumentMetadata.DOCUMENT_ID, documentId, Field.Store.YES));
+        }
+
+        String filename = segment.metadata().getString(DocumentMetadata.FILENAME);
+        if (filename != null) {
+            doc.add(new StringField(DocumentMetadata.FILENAME, filename, Field.Store.YES));
         }
 
         indexWriter.addDocument(doc);

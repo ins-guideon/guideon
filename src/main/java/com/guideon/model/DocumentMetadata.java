@@ -19,6 +19,10 @@ import java.time.Instant;
 })
 public class DocumentMetadata {
 
+    public static final String DOCUMENT_ID = "document_id";
+    public static final String FILENAME = "file_name";
+    public static final String REGULATION_TYPE = "regulation_type";
+
     @Id
     @Column(length = 36, nullable = false, updatable = false)
     private String id; // 업로드 시 생성된 UUID 문자열

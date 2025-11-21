@@ -175,19 +175,6 @@ public class RegulationSearchService {
 
         List<TextSegment> segments = splitter.split(document);
 
-        // 각 세그먼트에 메타데이터 추가
-        for (TextSegment segment : segments) {
-            segment.metadata().put("regulation_type", regulationType);
-            String fileName = document.metadata().getString("file_name");
-            if (fileName != null) {
-                segment.metadata().put("file_name", fileName);
-            }
-            String documentId = document.metadata().getString("document_id");
-            if (documentId != null) {
-                segment.metadata().put("document_id", documentId);
-            }
-        }
-
         // 임베딩 생성 및 Vector Store에 저장
         for (int segmentIndex = 0; segmentIndex < segments.size(); segmentIndex++) {
             TextSegment segment = segments.get(segmentIndex);
@@ -196,9 +183,7 @@ public class RegulationSearchService {
 
             // Hybrid Search가 활성화된 경우 BM25 인덱스에도 추가
             if (hybridSearchEnabled && hybridSearchService != null) {
-                String segmentId = embeddingId != null ? embeddingId
-                        : String.format("%s_segment_%d", regulationType, segmentIndex);
-                hybridSearchService.indexSegment(segment, regulationType, segmentId);
+                hybridSearchService.indexSegment(segment, regulationType, embeddingId);
             }
         }
 

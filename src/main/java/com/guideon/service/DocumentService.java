@@ -61,9 +61,9 @@ public class DocumentService {
         entity = documentRepository.save(entity);
 
         Document doc = Document.from(content);
-        doc.metadata().put("file_name", entity.getFileName());
-        doc.metadata().put("regulation_type", entity.getRegulationType());
-        doc.metadata().put("document_id", entity.getId());
+        doc.metadata().put(DocumentMetadata.FILENAME, entity.getFileName());
+        doc.metadata().put(DocumentMetadata.REGULATION_TYPE, entity.getRegulationType());
+        doc.metadata().put(DocumentMetadata.DOCUMENT_ID, entity.getId());
         regulationSearchService.indexDocument(doc, entity.getRegulationType());
         vectorStoreService.saveEmbeddingStore(regulationSearchService.getEmbeddingStore());
 
