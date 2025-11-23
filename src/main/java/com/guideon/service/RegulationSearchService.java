@@ -1,12 +1,12 @@
 package com.guideon.service;
 
 import com.guideon.config.ConfigLoader;
+import com.guideon.dto.SettingsDTO;
 import com.guideon.model.DocumentMetadata;
 import com.guideon.model.HybridSearchResult;
 import com.guideon.model.QueryAnalysisResult;
 import com.guideon.model.RegulationReference;
 import com.guideon.model.RegulationSearchResult;
-import com.guideon.model.ScoredSegment;
 import com.guideon.util.EnhancedContextBuilder;
 import com.guideon.util.SearchResultConverter;
 import dev.langchain4j.data.document.Document;
@@ -35,16 +35,23 @@ import java.util.stream.Collectors;
 public class RegulationSearchService {
     private static final Logger logger = LoggerFactory.getLogger(RegulationSearchService.class);
 
-    private final ChatLanguageModel chatModel;
-    private final EmbeddingModel embeddingModel;
+    private volatile ChatLanguageModel chatModel;
+    private volatile EmbeddingModel embeddingModel;
     private InMemoryEmbeddingStore<TextSegment> embeddingStore;
     private final ScoringModel scoringModel;
     private final HybridSearchService hybridSearchService;
 
+    // 모델 초기화 상태 관리
+    private volatile boolean modelsInitialized = false;
+    private final Object modelInitLock = new Object();
+    private String currentApiKey;
+    private String currentSearchModel;
+    private String currentEmbeddingModel;
+
     private final int maxResults;
     private final double minScore;
-    private final int chunkSize;
-    private final int chunkOverlap;
+    private int chunkSize;
+    private int chunkOverlap;
 
     // ReRanking 설정
     private final boolean reRankingEnabled;
@@ -60,20 +67,16 @@ public class RegulationSearchService {
      */
     public RegulationSearchService(ConfigLoader config, HybridSearchService hybridSearchService) {
         String apiKey = config.getGeminiApiKey();
+        String searchModel = "gemini-2.5-flash"; // 기본값
+        String embeddingModel = config.getEmbeddingModelName();
 
-        // Gemini Chat Model 초기화
-        this.chatModel = GoogleAiGeminiChatModel.builder()
-                .apiKey(apiKey)
-                .modelName("gemini-2.5-flash")
-                .temperature(0.2)
-                .build();
+        // 모델 정보 저장
+        this.currentApiKey = apiKey;
+        this.currentSearchModel = searchModel;
+        this.currentEmbeddingModel = embeddingModel;
 
-        // Google AI Gemini Embedding Model 초기화 (한국어 지원)
-        this.embeddingModel = GoogleAiEmbeddingModel.builder()
-                .apiKey(apiKey)
-                .modelName("text-embedding-004")
-                .maxRetries(3)
-                .build();
+        // 모델 초기화 (동기화)
+        initializeModels(apiKey, searchModel, embeddingModel);
 
         // In-Memory Embedding Store (실제 운영시 Qdrant로 교체)
         this.embeddingStore = new InMemoryEmbeddingStore<>();
@@ -114,9 +117,101 @@ public class RegulationSearchService {
         }
 
         logger.info(
-                "RegulationSearchService initialized with maxResults={}, minScore={}, chunkSize={}, chunkOverlap={}, reRankingEnabled={}, hybridSearchEnabled={}",
+                "RegulationSearchService initialized with maxResults={}, minScore={}, chunkSize={}, chunkOverlap={}, reRankingEnabled={}, hybridSearchEnabled={}, searchModel={}, embeddingModel={}",
                 maxResults, minScore, chunkSize, chunkOverlap, reRankingEnabled && scoringModel != null,
-                hybridSearchEnabled);
+                hybridSearchEnabled, currentSearchModel, currentEmbeddingModel);
+    }
+
+    /**
+     * 모델 초기화 (동기화 보장)
+     * 초기화가 성공한 후에만 전역 변수를 업데이트합니다.
+     * 예외 발생 시 synchronized 블록은 자동으로 해제되지만, modelsInitialized 상태는 복구됩니다.
+     */
+    private void initializeModels(String apiKey, String searchModel, String embeddingModel) {
+        synchronized (modelInitLock) {
+            try {
+                logger.info("Initializing models: searchModel={}, embeddingModel={}", searchModel, embeddingModel);
+
+                // 모델 초기화를 먼저 수행 (로컬 변수에 저장)
+                ChatLanguageModel newChatModel = GoogleAiGeminiChatModel.builder()
+                        .apiKey(apiKey)
+                        .modelName(searchModel)
+                        .temperature(0.2)
+                        .build();
+
+                EmbeddingModel newEmbeddingModel = GoogleAiEmbeddingModel.builder()
+                        .apiKey(apiKey)
+                        .modelName(embeddingModel)
+                        .maxRetries(3)
+                        .build();
+
+                // 초기화 성공 후에만 전역 변수 업데이트
+                this.chatModel = newChatModel;
+                this.embeddingModel = newEmbeddingModel;
+                this.currentApiKey = apiKey;
+                this.currentSearchModel = searchModel;
+                this.currentEmbeddingModel = embeddingModel;
+                this.modelsInitialized = true;
+
+                logger.info("Models initialized successfully: searchModel={}, embeddingModel={}", searchModel,
+                        embeddingModel);
+
+                // 대기 중인 스레드에 알림
+                modelInitLock.notifyAll();
+            } catch (Exception e) {
+                // 예외 발생 시 modelsInitialized 복구 (기존 모델이 여전히 유효함)
+                // synchronized 블록은 자동으로 해제되지만, 대기 중인 스레드를 깨워야 함
+                modelsInitialized = true;
+                modelInitLock.notifyAll();
+                throw new RuntimeException("모델 초기화 중 오류가 발생했습니다: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * 모델 초기화 완료 대기
+     */
+    private void waitForModelsInitialized() {
+        if (!modelsInitialized) {
+            synchronized (modelInitLock) {
+                while (!modelsInitialized) {
+                    try {
+                        logger.debug("Waiting for models to be initialized...");
+                        modelInitLock.wait(2000); // 최대 2초 대기
+                        if (!modelsInitialized) {
+                            logger.warn("Models initialization timeout, proceeding anyway");
+                            break;
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        logger.warn("Interrupted while waiting for models initialization");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Chat Model 가져오기 (초기화 완료 대기)
+     */
+    private ChatLanguageModel getChatModel() {
+        waitForModelsInitialized();
+        if (chatModel == null) {
+            throw new IllegalStateException("Chat model is not initialized");
+        }
+        return chatModel;
+    }
+
+    /**
+     * Embedding Model 가져오기 (초기화 완료 대기)
+     */
+    private EmbeddingModel getEmbeddingModel() {
+        waitForModelsInitialized();
+        if (embeddingModel == null) {
+            throw new IllegalStateException("Embedding model is not initialized");
+        }
+        return embeddingModel;
     }
 
     /**
@@ -124,19 +219,13 @@ public class RegulationSearchService {
      */
     @Deprecated
     public RegulationSearchService(String geminiApiKey) {
-        // Gemini Chat Model 초기화
-        this.chatModel = GoogleAiGeminiChatModel.builder()
-                .apiKey(geminiApiKey)
-                .modelName("gemini-2.5-flash")
-                .temperature(0.2)
-                .build();
+        // 모델 정보 저장
+        this.currentApiKey = geminiApiKey;
+        this.currentSearchModel = "gemini-2.5-flash";
+        this.currentEmbeddingModel = "text-embedding-004";
 
-        // Google AI Gemini Embedding Model 초기화 (한국어 지원)
-        this.embeddingModel = GoogleAiEmbeddingModel.builder()
-                .apiKey(geminiApiKey)
-                .modelName("text-embedding-004")
-                .maxRetries(3)
-                .build();
+        // 모델 초기화 (동기화)
+        initializeModels(geminiApiKey, currentSearchModel, currentEmbeddingModel);
 
         // In-Memory Embedding Store (실제 운영시 Qdrant로 교체)
         this.embeddingStore = new InMemoryEmbeddingStore<>();
@@ -179,7 +268,7 @@ public class RegulationSearchService {
         // 임베딩 생성 및 Vector Store에 저장
         for (int segmentIndex = 0; segmentIndex < segments.size(); segmentIndex++) {
             TextSegment segment = segments.get(segmentIndex);
-            Embedding embedding = embeddingModel.embed(segment).content();
+            Embedding embedding = getEmbeddingModel().embed(segment).content();
             String embeddingId = embeddingStore.add(embedding, segment);
 
             // Hybrid Search가 활성화된 경우 BM25 인덱스에도 추가
@@ -325,7 +414,7 @@ public class RegulationSearchService {
      * 벡터 검색 수행 (파라미터 커스터마이징)
      */
     private List<EmbeddingMatch<TextSegment>> performVectorSearch(String query, int maxResults, double minScore) {
-        Embedding queryEmbedding = embeddingModel.embed(query).content();
+        Embedding queryEmbedding = getEmbeddingModel().embed(query).content();
 
         List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(
                 queryEmbedding,
@@ -449,7 +538,7 @@ public class RegulationSearchService {
 
         // 3. LLM으로 답변 생성
         logger.debug("Generating answer with LLM...");
-        String rawAnswer = chatModel.generate(prompt);
+        String rawAnswer = getChatModel().generate(prompt);
         logger.info("Raw answer generated (length: {} chars)", rawAnswer.length());
 
         // 4. 답변 검증
@@ -507,8 +596,8 @@ public class RegulationSearchService {
             double score = match.score();
 
             // filename이 없으면 regulationType을 사용, 둘 다 없으면 "알 수 없음"
-            String documentName = filename != null && !filename.isEmpty() 
-                    ? filename 
+            String documentName = filename != null && !filename.isEmpty()
+                    ? filename
                     : (regulationType != null ? regulationType : "알 수 없음");
 
             RegulationReference ref = new RegulationReference(
@@ -798,7 +887,7 @@ public class RegulationSearchService {
 
             // 모든 임베딩을 검색하기 위해 더미 임베딩 사용
             // 매우 큰 maxResults로 설정하여 가능한 한 많은 결과 가져오기
-            Embedding dummyEmbedding = embeddingModel.embed("*").content();
+            Embedding dummyEmbedding = getEmbeddingModel().embed("*").content();
             List<EmbeddingMatch<TextSegment>> allMatches = embeddingStore.findRelevant(
                     dummyEmbedding,
                     10000 // 매우 큰 수로 설정하여 가능한 한 많은 결과 가져오기
@@ -834,5 +923,49 @@ public class RegulationSearchService {
         }
 
         return deletedCount;
+    }
+
+    /**
+     * 설정 적용 (런타임 설정 업데이트)
+     * chunkSize와 chunkOverlap은 즉시 업데이트됩니다.
+     * apiKey, searchModel, embeddingModel이 변경되면 모델을 재초기화합니다.
+     */
+    public void applyConfig(SettingsDTO settings) {
+        if (settings == null) {
+            logger.warn("SettingsDTO is null, skipping config update");
+            return;
+        }
+
+        // 청크 설정 업데이트
+        if (settings.getChunkSize() != null && !settings.getChunkSize().equals(this.chunkSize)) {
+            logger.info("Chunk size updated: {} -> {}", this.chunkSize, settings.getChunkSize());
+            this.chunkSize = settings.getChunkSize();
+        }
+
+        if (settings.getChunkOverlap() != null && !settings.getChunkOverlap().equals(this.chunkOverlap)) {
+            logger.info("Chunk overlap updated: {} -> {}", this.chunkOverlap, settings.getChunkOverlap());
+            this.chunkOverlap = settings.getChunkOverlap();
+        }
+
+        // 모델 재초기화 (필요한 경우)
+        String newApiKey = settings.getApiKey() != null ? settings.getApiKey() : currentApiKey;
+        String newSearchModel = settings.getSearchModel() != null ? settings.getSearchModel() : currentSearchModel;
+        String newEmbeddingModel = settings.getEmbeddingModel() != null ? settings.getEmbeddingModel()
+                : currentEmbeddingModel;
+
+        boolean modelChanged = !newSearchModel.equals(currentSearchModel) ||
+                !newEmbeddingModel.equals(currentEmbeddingModel) ||
+                (settings.getApiKey() != null && !newApiKey.equals(currentApiKey));
+
+        if (modelChanged) {
+            logger.info("Model update needed: searchModel={}->{}, embeddingModel={}->{}, apiKey changed={}",
+                    currentSearchModel, newSearchModel, currentEmbeddingModel, newEmbeddingModel,
+                    settings.getApiKey() != null && !newApiKey.equals(currentApiKey));
+
+            synchronized (modelInitLock) {
+                modelsInitialized = false;
+                initializeModels(newApiKey, newSearchModel, newEmbeddingModel);
+            }
+        }
     }
 }

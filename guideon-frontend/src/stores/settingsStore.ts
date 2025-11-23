@@ -9,10 +9,10 @@ interface SettingsState extends AppSettings {
 }
 
 const defaultSettings: AppSettings = {
-  model: 'gemini-2.5-flash',
-  maxResults: 5,
-  minConfidence: 0.7,
-  enableNotifications: true,
+  searchModel: 'gemini-2.5-flash',
+  embeddingModel: 'text-embedding-004',
+  chunkSize: 500,
+  chunkOverlap: 100,
 };
 
 export const useSettingsStore = create<SettingsState>()(

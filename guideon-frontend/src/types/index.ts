@@ -134,10 +134,10 @@ export interface PaginatedResponse<T> {
 // 애플리케이션 설정
 export interface AppSettings {
   apiKey?: string;
-  model: 'gemini-2.5-flash' | 'gemini-2.5-pro';
-  maxResults: number;
-  minConfidence: number;
-  enableNotifications: boolean;
+  searchModel: string;
+  embeddingModel: string;
+  chunkSize: number;
+  chunkOverlap: number;
 }
 
 // 문서 업로드 관련 타입
