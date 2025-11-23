@@ -5,6 +5,7 @@ package com.guideon.dto;
  */
 public class QuestionReferenceDTO {
     private String documentName;
+    private String documentId;
     private String content;
     private double relevanceScore;
 
@@ -13,6 +14,13 @@ public class QuestionReferenceDTO {
 
     public QuestionReferenceDTO(String documentName, String content, double relevanceScore) {
         this.documentName = documentName;
+        this.content = content;
+        this.relevanceScore = relevanceScore;
+    }
+
+    public QuestionReferenceDTO(String documentName, String documentId, String content, double relevanceScore) {
+        this.documentName = documentName;
+        this.documentId = documentId;
         this.content = content;
         this.relevanceScore = relevanceScore;
     }
@@ -39,5 +47,13 @@ public class QuestionReferenceDTO {
 
     public void setRelevanceScore(double relevanceScore) {
         this.relevanceScore = relevanceScore;
+    }
+
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
     }
 }

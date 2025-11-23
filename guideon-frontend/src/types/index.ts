@@ -18,6 +18,7 @@ export interface QueryAnalysisResult {
 // 규정 참조 정보
 export interface RegulationReference {
   documentName: string;
+  documentId?: string;
   content: string;
   relevanceScore: number;
   chapter?: string;

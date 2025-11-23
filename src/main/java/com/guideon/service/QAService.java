@@ -82,6 +82,7 @@ public class QAService {
         return references.stream()
             .map(ref -> new QuestionReferenceDTO(
                 ref.getDocumentName(),
+                ref.getDocumentId(),
                 ref.getContent(),
                 ref.getRelevanceScore()
             ))

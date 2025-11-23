@@ -5,6 +5,7 @@ package com.guideon.model;
  */
 public class RegulationReference {
     private String documentName;    // 규정 문서명
+    private String documentId;      // 문서 ID (전체 문서 조회용)
     private String articleNumber;   // 조항 번호
     private String content;         // 조항 내용
     private int pageNumber;         // 페이지 번호
@@ -15,6 +16,16 @@ public class RegulationReference {
     public RegulationReference(String documentName, String articleNumber,
                               String content, int pageNumber, double relevanceScore) {
         this.documentName = documentName;
+        this.articleNumber = articleNumber;
+        this.content = content;
+        this.pageNumber = pageNumber;
+        this.relevanceScore = relevanceScore;
+    }
+
+    public RegulationReference(String documentName, String documentId, String articleNumber,
+                              String content, int pageNumber, double relevanceScore) {
+        this.documentName = documentName;
+        this.documentId = documentId;
         this.articleNumber = articleNumber;
         this.content = content;
         this.pageNumber = pageNumber;
@@ -62,10 +73,19 @@ public class RegulationReference {
         this.relevanceScore = relevanceScore;
     }
 
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
+    }
+
     @Override
     public String toString() {
         return "RegulationReference{" +
                 "documentName='" + documentName + '\'' +
+                ", documentId='" + documentId + '\'' +
                 ", articleNumber='" + articleNumber + '\'' +
                 ", content='" + content + '\'' +
                 ", pageNumber=" + pageNumber +

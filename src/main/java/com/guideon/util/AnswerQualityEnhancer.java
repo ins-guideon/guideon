@@ -144,16 +144,7 @@ public class AnswerQualityEnhancer {
         String markdownAnswer = convertToMarkdown(cleanedAnswer);
         enhanced.append(markdownAnswer);
 
-        // 2. 참조 조항 섹션 추가 (Markdown 형식)
-        if (extractedArticles != null && !extractedArticles.isEmpty()) {
-            enhanced.append("\n\n---\n\n");
-            enhanced.append("### 📋 참조 조항\n\n");
-            for (String article : extractedArticles) {
-                enhanced.append("- **").append(article).append("**\n");
-            }
-        }
-
-        // 3. 의도별 추가 정보 (Markdown 인용구 형식)
+        // 2. 의도별 추가 정보 (Markdown 인용구 형식)
         if (analysis != null) {
             String intentEnhancement = addIntentBasedEnhancement(cleanedAnswer, analysis.getIntent());
             if (!intentEnhancement.isEmpty()) {

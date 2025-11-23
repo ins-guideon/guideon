@@ -8,21 +8,20 @@ import {
   Tag,
   Divider,
   Progress,
-  List,
   Space,
   message,
 } from 'antd';
 import {
   SendOutlined,
-  LikeOutlined,
-  DislikeOutlined,
   CopyOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { regulationService } from '@/services/regulationService';
 import type { RegulationSearchResult } from '@/types';
+import { DocumentDetailModal } from '@/components/common/DocumentDetailModal';
 import '@/styles/markdown.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -31,6 +30,8 @@ const { TextArea } = Input;
 export const QAPage = () => {
   const [question, setQuestion] = useState('');
   const [result, setResult] = useState<RegulationSearchResult | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
 
   const { mutate: askQuestion, isPending } = useMutation({
     mutationFn: (q: string) => regulationService.askQuestion(q),
@@ -58,14 +59,31 @@ export const QAPage = () => {
     }
   };
 
-  const handleRating = async (_rating: 'helpful' | 'not_helpful') => {
-    try {
-      // 답변 평가 API 호출 (historyId 필요)
-      message.success('피드백이 저장되었습니다.');
-    } catch (error) {
-      message.error('피드백 저장에 실패했습니다.');
+
+  const handleDocumentClick = (documentId: string | undefined) => {
+    if (documentId) {
+      setSelectedDocumentId(documentId);
+      setModalVisible(true);
+    } else {
+      message.warning('문서 ID가 없습니다.');
     }
   };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setSelectedDocumentId(null);
+  };
+
+  // 참조 문서 목록 (중복 제거)
+  const uniqueReferences = result
+    ? Array.from(
+        new Map(
+          result.references
+            .filter((ref) => ref.documentName)
+            .map((ref) => [ref.documentName, ref])
+        ).values()
+      )
+    : [];
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -205,79 +223,42 @@ export const QAPage = () => {
               </ReactMarkdown>
             </div>
 
-            <Divider style={{ margin: '24px 0' }} />
-
-            <div>
-              <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 12 }}>
-                답변이 도움이 되었나요?
-              </Text>
-              <Space>
-                <Button
-                  icon={<LikeOutlined />}
-                  onClick={() => handleRating('helpful')}
-                  size="middle"
-                >
-                  도움됨
-                </Button>
-                <Button
-                  icon={<DislikeOutlined />}
-                  onClick={() => handleRating('not_helpful')}
-                  size="middle"
-                >
-                  도움안됨
-                </Button>
-              </Space>
-            </div>
-          </Card>
-
-          {/* 근거 규정 */}
-          <Card
-            title={<Text strong style={{ fontSize: 16 }}>근거 규정</Text>}
-            style={{
-              border: '1px solid #e8e8e8',
-              borderRadius: 8,
-            }}
-            bodyStyle={{ padding: 24 }}
-          >
-            <List
-              dataSource={result.references}
-              renderItem={(ref, index) => (
-                <List.Item style={{ padding: '20px 0' }}>
-                  <List.Item.Meta
-                    avatar={
-                      <div
+            {uniqueReferences.length > 0 && (
+              <>
+                <Divider style={{ margin: '24px 0' }} />
+                <div>
+                  <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 12 }}>
+                    참조한 문서:
+                  </Text>
+                  <div style={{ marginTop: 12 }}>
+                    {uniqueReferences.map((ref, index) => (
+                      <Tag
+                        key={index}
+                        icon={<FileTextOutlined />}
+                        color="cyan"
                         style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: '50%',
-                          background: '#1890ff',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 'bold',
-                          fontSize: 18,
+                          fontSize: 13,
+                          padding: '6px 12px',
+                          marginBottom: 8,
+                          cursor: ref.documentId ? 'pointer' : 'default',
                         }}
+                        onClick={() => ref.documentId && handleDocumentClick(ref.documentId)}
                       >
-                        {index + 1}
-                      </div>
-                    }
-                    title={
-                      <Space style={{ marginBottom: 8 }}>
-                        <Text strong style={{ fontSize: 15 }}>{ref.documentName}</Text>
-                        <Tag color="orange" style={{ fontSize: 13 }}>
-                          관련도: {(ref.relevanceScore * 100).toFixed(0)}%
-                        </Tag>
-                      </Space>
-                    }
-                    description={
-                      <Text style={{ fontSize: 14, lineHeight: 1.6 }}>{ref.content}</Text>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
+                        {ref.documentName}
+                      </Tag>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </Card>
+
+          {/* 문서 상세 모달 */}
+          <DocumentDetailModal
+            open={modalVisible}
+            onClose={handleModalClose}
+            documentId={selectedDocumentId}
+          />
         </>
       )}
     </div>

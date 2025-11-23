@@ -1,6 +1,7 @@
 package com.guideon.service;
 
 import com.guideon.config.ConfigLoader;
+import com.guideon.model.DocumentMetadata;
 import com.guideon.model.HybridSearchResult;
 import com.guideon.model.QueryAnalysisResult;
 import com.guideon.model.RegulationReference;
@@ -498,12 +499,21 @@ public class RegulationSearchService {
             EmbeddingMatch<TextSegment> match = matches.get(i);
             TextSegment segment = match.embedded();
 
+            // 메타데이터에서 정보 추출
+            String filename = segment.metadata().getString(DocumentMetadata.FILENAME);
+            String documentId = segment.metadata().getString(DocumentMetadata.DOCUMENT_ID);
             String regulationType = segment.metadata().getString("regulation_type");
             String content = segment.text();
             double score = match.score();
 
+            // filename이 없으면 regulationType을 사용, 둘 다 없으면 "알 수 없음"
+            String documentName = filename != null && !filename.isEmpty() 
+                    ? filename 
+                    : (regulationType != null ? regulationType : "알 수 없음");
+
             RegulationReference ref = new RegulationReference(
-                    regulationType != null ? regulationType : "알 수 없음",
+                    documentName,
+                    documentId, // 문서 ID 추가
                     "N/A", // 조항 번호는 별도 파싱 필요
                     content,
                     0, // 페이지 번호는 메타데이터에서 가져와야 함

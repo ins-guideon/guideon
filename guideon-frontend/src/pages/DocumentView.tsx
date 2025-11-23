@@ -5,8 +5,6 @@ import {
   Typography,
   Space,
   Tag,
-  Modal,
-  Descriptions,
   message,
 } from 'antd';
 import {
@@ -15,16 +13,16 @@ import {
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { documentService } from '@/services/documentService';
-import type { DocumentInfo, DocumentDetailResponse } from '@/types';
+import type { DocumentInfo } from '@/types';
 import dayjs from 'dayjs';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { DocumentDetailModal } from '@/components/common/DocumentDetailModal';
 
 const { Title, Text } = Typography;
 
 export const DocumentView = () => {
-  const [selectedDocument, setSelectedDocument] = useState<DocumentDetailResponse | null>(null);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   // 문서 목록 조회 - 페이지가 열릴 때마다 항상 최신 데이터를 가져옴
   const { data: documentList, isLoading } = useQuery({
@@ -34,22 +32,14 @@ export const DocumentView = () => {
     staleTime: 0, // 데이터를 즉시 stale로 표시하여 항상 재요청
   });
 
-  const handleFileNameClick = async (record: DocumentInfo) => {
-    setIsDetailLoading(true);
-    try {
-      const detail = await documentService.getDocumentDetail(record.id);
-      setSelectedDocument(detail);
-      setModalVisible(true);
-    } catch (error) {
-      message.error('문서 상세 정보를 불러오는 중 오류가 발생했습니다.');
-    } finally {
-      setIsDetailLoading(false);
-    }
+  const handleFileNameClick = (record: DocumentInfo) => {
+    setSelectedDocumentId(record.id);
+    setModalVisible(true);
   };
 
   const handleCloseModal = () => {
     setModalVisible(false);
-    setSelectedDocument(null);
+    setSelectedDocumentId(null);
   };
 
   const columns = [
@@ -145,88 +135,11 @@ export const DocumentView = () => {
         </Space>
       </Card>
 
-      <Modal
-        title={
-          <Space>
-            <FileTextOutlined />
-            <span>문서 상세 정보</span>
-          </Space>
-        }
+      <DocumentDetailModal
         open={modalVisible}
-        onCancel={handleCloseModal}
-        footer={null}
-        width={1000}
-        style={{ top: 20 }}
-      >
-        {isDetailLoading ? (
-          <LoadingSpinner />
-        ) : selectedDocument ? (
-          <div>
-            <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
-              <Descriptions.Item label="파일명">
-                {selectedDocument.fileName}
-              </Descriptions.Item>
-              <Descriptions.Item label="규정 유형">
-                <Tag color="blue">{selectedDocument.regulationType}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="업로드 시간">
-                {dayjs(selectedDocument.uploadTime).format('YYYY-MM-DD HH:mm:ss')}
-              </Descriptions.Item>
-              <Descriptions.Item label="작성자">
-                {selectedDocument.uploaderName}
-              </Descriptions.Item>
-              <Descriptions.Item label="파일 크기">
-                {selectedDocument.fileSize < 1024
-                  ? `${selectedDocument.fileSize} B`
-                  : selectedDocument.fileSize < 1024 * 1024
-                    ? `${(selectedDocument.fileSize / 1024).toFixed(2)} KB`
-                    : `${(selectedDocument.fileSize / (1024 * 1024)).toFixed(2)} MB`}
-              </Descriptions.Item>
-              <Descriptions.Item label="상태">
-                <Tag
-                  color={
-                    selectedDocument.status === 'indexed'
-                      ? 'success'
-                      : selectedDocument.status === 'pending'
-                        ? 'processing'
-                        : 'error'
-                  }
-                >
-                  {selectedDocument.status === 'indexed'
-                    ? '인덱싱 완료'
-                    : selectedDocument.status === 'pending'
-                      ? '대기 중'
-                      : '오류'}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-
-            <div>
-              <Text strong style={{ display: 'block', marginBottom: 12 }}>
-                내용
-              </Text>
-              <Card
-                style={{
-                  backgroundColor: '#fafafa',
-                  maxHeight: 400,
-                  overflowY: 'auto',
-                }}
-              >
-                <pre
-                  style={{
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    margin: 0,
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  {selectedDocument.content}
-                </pre>
-              </Card>
-            </div>
-          </div>
-        ) : null}
-      </Modal>
+        onClose={handleCloseModal}
+        documentId={selectedDocumentId}
+      />
     </div>
   );
 };
