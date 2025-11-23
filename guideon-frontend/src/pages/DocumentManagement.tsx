@@ -22,6 +22,8 @@ import { documentService } from '@/services/documentService';
 import type { DocumentInfo, DocumentDetailResponse } from '@/types';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { DocumentDetailModal } from '@/components/common/DocumentDetailModal';
+import { NotificationModal } from '@/components/common/NotificationModal';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -30,6 +32,17 @@ export const DocumentManagement = () => {
     const queryClient = useQueryClient();
     const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
+
+    // 알림 모달 관련 state
+    const [notificationModal, setNotificationModal] = useState<{
+        open: boolean;
+        type: 'success' | 'error' | 'warning';
+        message: string;
+    }>({
+        open: false,
+        type: 'success',
+        message: '',
+    });
 
     // 문서 목록 조회 - 페이지가 열릴 때마다 항상 최신 데이터를 가져옴
     const { data: documentList, isLoading } = useQuery({
@@ -43,11 +56,19 @@ export const DocumentManagement = () => {
     const { mutate: deleteDocument } = useMutation({
         mutationFn: (id: string) => documentService.deleteDocument(id),
         onSuccess: () => {
-            message.success('문서가 삭제되었습니다.');
+            setNotificationModal({
+                open: true,
+                type: 'success',
+                message: '문서가 삭제되었습니다.',
+            });
             queryClient.invalidateQueries({ queryKey: ['documents-view'] });
         },
         onError: (error) => {
-            message.error(error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.');
+            setNotificationModal({
+                open: true,
+                type: 'error',
+                message: error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.',
+            });
         },
     });
 
@@ -214,6 +235,13 @@ export const DocumentManagement = () => {
                 open={modalVisible}
                 onClose={handleCloseModal}
                 documentId={selectedDocumentId}
+            />
+
+            <NotificationModal
+                open={notificationModal.open}
+                type={notificationModal.type}
+                message={notificationModal.message}
+                onClose={() => setNotificationModal({ ...notificationModal, open: false })}
             />
         </div>
     );

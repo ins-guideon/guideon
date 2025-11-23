@@ -19,6 +19,7 @@ import { documentService } from '@/services/documentService';
 import type { DocumentDetailResponse } from '@/types';
 import { REGULATION_TYPES } from '@/types';
 import type { UploadFile } from 'antd';
+import { NotificationModal } from '@/components/common/NotificationModal';
 
 const { Title, Paragraph, Text } = Typography;
 const { Option } = Select;
@@ -34,6 +35,18 @@ export const DocumentUpload = () => {
   // 수정 모드 관련 state
   const [editMode, setEditMode] = useState<boolean>(false);
   const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
+  const [documentDetail, setDocumentDetail] = useState<DocumentDetailResponse | null>(null);
+
+  // 알림 모달 관련 state
+  const [notificationModal, setNotificationModal] = useState<{
+    open: boolean;
+    type: 'success' | 'error' | 'warning';
+    message: string;
+  }>({
+    open: false,
+    type: 'success',
+    message: '',
+  });
 
   // location.state에서 수정 모드 정보 확인 및 초기화
   useEffect(() => {
@@ -41,6 +54,7 @@ export const DocumentUpload = () => {
     if (state?.editMode && state.documentId && state.documentDetail) {
       setEditMode(true);
       setEditingDocumentId(state.documentId);
+      setDocumentDetail(state.documentDetail);
       // 기존 문서 정보로 폼 초기화
       setSelectedType(state.documentDetail.regulationType);
       setExtractedText(state.documentDetail.content);
@@ -52,12 +66,40 @@ export const DocumentUpload = () => {
     mutationFn: ({ file, type }: { file: File; type: string }) =>
       documentService.extractText(file, type),
     onSuccess: ({ text }) => {
-      message.success('텍스트를 추출했습니다. 아래에서 확인하세요.');
+      setNotificationModal({
+        open: true,
+        type: 'success',
+        message: '텍스트를 추출했습니다. 아래에서 확인하세요.',
+      });
       setExtractedText(text);
       // 파일은 업로드 시 필요하므로 유지
     },
     onError: (error) => {
-      message.error(error instanceof Error ? error.message : '텍스트 추출 중 오류가 발생했습니다.');
+      setNotificationModal({
+        open: true,
+        type: 'error',
+        message: error instanceof Error ? error.message : '텍스트 추출 중 오류가 발생했습니다.',
+      });
+    },
+  });
+
+  // 문서 ID 기반 텍스트 추출(수정 모드용)
+  const { mutate: extractTextFromDocumentId, isPending: isExtractingFromId } = useMutation({
+    mutationFn: (documentId: string) => documentService.extractTextFromDocumentId(documentId),
+    onSuccess: ({ text }) => {
+      setNotificationModal({
+        open: true,
+        type: 'success',
+        message: '텍스트를 재추출했습니다. 아래에서 확인하세요.',
+      });
+      setExtractedText(text);
+    },
+    onError: (error) => {
+      setNotificationModal({
+        open: true,
+        type: 'error',
+        message: error instanceof Error ? error.message : '텍스트 추출 중 오류가 발생했습니다.',
+      });
     },
   });
 
@@ -72,7 +114,11 @@ export const DocumentUpload = () => {
       return documentService.uploadDocument(file, selectedType, extractedText);
     },
     onSuccess: () => {
-      message.success('문서가 성공적으로 업로드되고 인덱싱되었습니다.');
+      setNotificationModal({
+        open: true,
+        type: 'success',
+        message: '문서가 성공적으로 업로드되고 인덱싱되었습니다.',
+      });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documents-view'] });
       setExtractedText(null);
@@ -82,7 +128,11 @@ export const DocumentUpload = () => {
       setEditingDocumentId(null);
     },
     onError: (error) => {
-      message.error(error instanceof Error ? error.message : '문서 업로드 중 오류가 발생했습니다.');
+      setNotificationModal({
+        open: true,
+        type: 'error',
+        message: error instanceof Error ? error.message : '문서 업로드 중 오류가 발생했습니다.',
+      });
     },
   });
 
@@ -97,7 +147,11 @@ export const DocumentUpload = () => {
       return documentService.updateDocument(editingDocumentId, file, extractedText, selectedType);
     },
     onSuccess: () => {
-      message.success('문서가 성공적으로 업데이트되었습니다.');
+      setNotificationModal({
+        open: true,
+        type: 'success',
+        message: '문서가 성공적으로 업데이트되었습니다.',
+      });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documents-view'] });
       setExtractedText(null);
@@ -105,9 +159,35 @@ export const DocumentUpload = () => {
       setFileList([]);
       setEditMode(false);
       setEditingDocumentId(null);
+      setDocumentDetail(null);
     },
     onError: (error) => {
-      message.error(error instanceof Error ? error.message : '문서 업데이트 중 오류가 발생했습니다.');
+      setNotificationModal({
+        open: true,
+        type: 'error',
+        message: error instanceof Error ? error.message : '문서 업데이트 중 오류가 발생했습니다.',
+      });
+    },
+  });
+
+  // 텍스트 다듬기
+  const { mutate: cleanText, isPending: isCleaning } = useMutation({
+    mutationFn: ({ text, fileExtension }: { text: string; fileExtension?: string }) =>
+      documentService.cleanText(text, fileExtension),
+    onSuccess: ({ text }) => {
+      setNotificationModal({
+        open: true,
+        type: 'success',
+        message: '텍스트를 다듬었습니다.',
+      });
+      setExtractedText(text);
+    },
+    onError: () => {
+      setNotificationModal({
+        open: true,
+        type: 'error',
+        message: '다듬기에 실패했습니다.',
+      });
     },
   });
 
@@ -117,27 +197,65 @@ export const DocumentUpload = () => {
     setSelectedType('');
     setEditMode(false);
     setEditingDocumentId(null);
+    setDocumentDetail(null);
   };
 
+  // 파일 확장자 추출 헬퍼 함수
+  const getFileExtension = (): string | undefined => {
+    // 파일이 있는 경우
+    if (fileList.length > 0 && fileList[0].originFileObj) {
+      const fileName = fileList[0].originFileObj.name;
+      const lastDotIndex = fileName.lastIndexOf('.');
+      if (lastDotIndex > 0 && lastDotIndex < fileName.length - 1) {
+        return fileName.substring(lastDotIndex + 1).toLowerCase();
+      }
+    }
 
-  const handleUpload = () => {
-    // 수정 모드가 아닐 때만 파일 필수 체크
-    if (!editMode && fileList.length === 0) {
-      message.warning('업로드할 파일을 선택해주세요.');
+    // 수정 모드이고 파일이 없는 경우 - 기존 문서의 파일명에서 추출
+    if (editMode && !fileList.length && documentDetail?.fileName) {
+      const fileName = documentDetail.fileName;
+      const lastDotIndex = fileName.lastIndexOf('.');
+      if (lastDotIndex > 0 && lastDotIndex < fileName.length - 1) {
+        return fileName.substring(lastDotIndex + 1).toLowerCase();
+      }
+    }
+
+    return undefined;
+  };
+
+  const handleCleanText = () => {
+    if (!extractedText || !extractedText.trim()) {
+      message.warning('다듬을 텍스트가 없습니다.');
       return;
     }
 
+    const fileExtension = getFileExtension();
+    cleanText({ text: extractedText, fileExtension });
+  };
+
+
+  const handleExtractText = () => {
     if (!selectedType) {
       message.warning('규정 유형을 선택해주세요.');
       return;
     }
 
-    // 수정 모드가 아니고 파일이 있을 때만 텍스트 추출
-    if (!editMode && fileList.length > 0) {
+    // 수정 모드: 문서 ID로 텍스트 재추출
+    if (editMode && editingDocumentId) {
+      extractTextFromDocumentId(editingDocumentId);
+      return;
+    }
+
+    // 일반 모드: 파일이 있을 때만 텍스트 추출
+    if (fileList.length === 0) {
+      message.warning('업로드할 파일을 선택해주세요.');
+      return;
+    }
+
+    if (fileList.length > 0) {
       const file = fileList[0].originFileObj as File;
       extractText({ file, type: selectedType });
     }
-    // 수정 모드일 때는 파일이 없어도 텍스트만 수정 가능
   };
 
   const beforeUpload = (file: File) => {
@@ -234,25 +352,31 @@ export const DocumentUpload = () => {
             </Text>
           </div>
 
-          {!editMode && (
-            <Button
-              type="primary"
-              size="large"
-              onClick={handleUpload}
-              loading={isExtracting}
-              disabled={fileList.length === 0 || !selectedType}
-              style={{
-                height: 48,
-                fontSize: 16,
-                fontWeight: 500,
-              }}
-              block
-            >
-              {isExtracting ? '텍스트 추출 중...' : '업로드 후 텍스트 추출'}
-            </Button>
-          )}
+          <Button
+            type="primary"
+            size="large"
+            onClick={handleExtractText}
+            loading={isExtracting || isExtractingFromId}
+            disabled={
+              (!editMode && fileList.length === 0) ||
+              !selectedType ||
+              (editMode && !editingDocumentId)
+            }
+            style={{
+              height: 48,
+              fontSize: 16,
+              fontWeight: 500,
+            }}
+            block
+          >
+            {isExtracting || isExtractingFromId
+              ? '텍스트 추출 중...'
+              : editMode
+                ? '텍스트 재추출'
+                : '업로드 후 텍스트 추출'}
+          </Button>
 
-          {isExtracting && (
+          {(isExtracting || isExtractingFromId) && (
             <div>
               <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
                 문서를 파싱하여 본문 텍스트를 추출하는 중입니다...
@@ -285,13 +409,20 @@ export const DocumentUpload = () => {
                 rows={20}
                 placeholder="추출된 텍스트가 표시됩니다."
               />
-              <Text type="secondary" style={{ marginTop: 8, display: 'block' }}>
+              <Text type="secondary" style={{ marginTop: 8, display: 'block', whiteSpace: 'pre-wrap' }}>
                 길이가 긴 경우 검수 후 개인정보 등 민감 정보를 제거해 주세요.
               </Text>
             </div>
 
             <Space>
               <Button onClick={handleCancel}>취소</Button>
+              <Button
+                onClick={handleCleanText}
+                loading={isCleaning}
+                disabled={!extractedText || !extractedText.trim()}
+              >
+                {isCleaning ? '다듬는 중...' : '다듬기'}
+              </Button>
               {editMode ? (
                 <Button
                   type="primary"
@@ -314,6 +445,12 @@ export const DocumentUpload = () => {
         </Card>
       )}
 
+      <NotificationModal
+        open={notificationModal.open}
+        type={notificationModal.type}
+        message={notificationModal.message}
+        onClose={() => setNotificationModal({ ...notificationModal, open: false })}
+      />
     </div>
   );
 };

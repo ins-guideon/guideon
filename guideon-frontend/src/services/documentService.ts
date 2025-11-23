@@ -28,6 +28,17 @@ export const documentService = {
     return response.data;
   },
 
+  // 문서 ID 기반 텍스트 추출
+  extractTextFromDocumentId: async (documentId: string): Promise<{ text: string }> => {
+    const response = await api.post<ApiResponse<{ text: string }>>(
+      `/documents/extract-text/${documentId}`
+    );
+    if (!response.success || !response.data) {
+      throw new Error(response.error || response.message || '텍스트 추출 중 오류가 발생했습니다.');
+    }
+    return response.data;
+  },
+
   // 문서 업로드
   uploadDocument: async (file: File, regulationType: string, content: string): Promise<DocumentUploadResponse> => {
     const formData = new FormData();
@@ -111,6 +122,26 @@ export const documentService = {
     );
     if (!response.success || !response.data) {
       throw new Error(response.error || response.message || '문서 업데이트 중 오류가 발생했습니다.');
+    }
+    return response.data;
+  },
+
+  // 텍스트 다듬기
+  cleanText: async (text: string, fileExtension?: string): Promise<{ text: string }> => {
+    const response = await api.post<ApiResponse<{ text: string }>>(
+      '/documents/clean-text',
+      {
+        text,
+        fileExtension: fileExtension || undefined,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    if (!response.success || !response.data) {
+      throw new Error(response.error || response.message || '텍스트 다듬기 중 오류가 발생했습니다.');
     }
     return response.data;
   },

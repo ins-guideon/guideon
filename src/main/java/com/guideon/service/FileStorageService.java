@@ -51,6 +51,19 @@ public class FileStorageService {
     }
 
     /**
+     * 저장된 파일의 경로를 반환합니다.
+     * 
+     * @param savedFileName 저장된 파일명
+     * @return 파일 경로
+     */
+    public Path getFilePath(String savedFileName) {
+        if (savedFileName == null || savedFileName.isEmpty()) {
+            throw new IllegalArgumentException("파일 이름이 비어있습니다.");
+        }
+        return Paths.get(uploadDir, savedFileName);
+    }
+
+    /**
      * 업로드 디렉토리에 저장
      * 파일명은 documentId를 사용합니다.
      */

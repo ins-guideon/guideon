@@ -7,6 +7,7 @@ import com.guideon.dto.ExtractTextResponse;
 import com.guideon.model.DocumentMetadata;
 import com.guideon.service.DocumentService;
 import com.guideon.service.FileStorageService;
+import com.guideon.service.textclean.TextCleanServiceFacade;
 import com.guideon.service.TextExtractionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,14 +21,19 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -40,13 +46,16 @@ public class DocumentController {
     private final DocumentService documentService;
     private final FileStorageService fileStorageService;
     private final TextExtractionService textExtractionService;
+    private final TextCleanServiceFacade textCleanServiceFacade;
 
     public DocumentController(DocumentService documentService,
             FileStorageService fileStorageService,
-            TextExtractionService textExtractionService) {
+            TextExtractionService textExtractionService,
+            TextCleanServiceFacade textCleanServiceFacade) {
         this.documentService = documentService;
         this.fileStorageService = fileStorageService;
         this.textExtractionService = textExtractionService;
+        this.textCleanServiceFacade = textCleanServiceFacade;
     }
 
     @Operation(summary = "문서 업로드", description = "PDF, DOC, DOCX, TXT 파일을 업로드하고 벡터 인덱싱을 수행합니다.")
@@ -113,6 +122,72 @@ public class DocumentController {
         } catch (Exception e) {
             logger.error("텍스트 추출 중 오류 발생", e);
             return ApiResponse.error("텍스트 추출 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "문서 ID 기반 텍스트 추출", description = "저장된 문서 파일에서 텍스트를 재추출합니다.")
+    @PostMapping("/extract-text/{documentId}")
+    public ApiResponse<ExtractTextResponse> extractTextFromDocumentId(
+            @Parameter(description = "텍스트를 추출할 문서 ID", required = true) @PathVariable String documentId) {
+
+        logger.info("문서 ID 기반 텍스트 추출 요청: {}", documentId);
+        try {
+            // 문서 메타데이터 조회
+            DocumentMetadata metadata = documentService.findById(documentId);
+
+            // 저장된 파일명 확인
+            String storageFileName = metadata.getStorageFileName();
+            if (storageFileName == null || storageFileName.isEmpty()) {
+                throw new IllegalArgumentException("문서에 저장된 파일이 없습니다: " + documentId);
+            }
+
+            // 파일 경로 가져오기
+            Path filePath = fileStorageService.getFilePath(storageFileName);
+
+            // 파일 존재 여부 확인
+            if (!Files.exists(filePath)) {
+                throw new IllegalArgumentException("저장된 파일을 찾을 수 없습니다: " + storageFileName);
+            }
+
+            // 텍스트 추출 (Path 사용)
+            String text = textExtractionService.extract(filePath);
+
+            logger.info("문서 ID 기반 텍스트 추출 완료: {} (길이: {})", documentId, text.length());
+            return ApiResponse.success(new ExtractTextResponse(text));
+        } catch (IllegalArgumentException e) {
+            logger.warn("잘못된 문서 ID 기반 텍스트 추출 요청: {}", e.getMessage());
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            logger.error("문서 ID 기반 텍스트 추출 중 오류 발생", e);
+            return ApiResponse.error("텍스트 추출 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "텍스트 다듬기", description = "추출된 텍스트를 파일 형식에 맞게 정제하고 정규화합니다.")
+    @PostMapping("/clean-text")
+    public ApiResponse<ExtractTextResponse> cleanText(
+            @RequestBody Map<String, String> request) {
+
+        String text = request.get("text");
+        String fileExtension = request.get("fileExtension");
+
+        logger.info("텍스트 다듬기 요청: 확장자={}, 원본 길이={}", fileExtension, text != null ? text.length() : 0);
+
+        try {
+            if (text == null || text.trim().isEmpty()) {
+                throw new IllegalArgumentException("텍스트가 비어 있습니다.");
+            }
+
+            // TextCleanServiceFacade를 사용하여 텍스트 다듬기
+            String cleanedText = textCleanServiceFacade.clean(text, fileExtension);
+
+            return ApiResponse.success(new ExtractTextResponse(cleanedText));
+        } catch (IllegalArgumentException e) {
+            logger.warn("잘못된 텍스트 다듬기 요청: {}", e.getMessage());
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            logger.error("텍스트 다듬기 중 오류 발생", e);
+            return ApiResponse.error("텍스트 다듬기 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
