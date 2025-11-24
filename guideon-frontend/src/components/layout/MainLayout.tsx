@@ -2,7 +2,6 @@ import { Layout, Menu, Avatar, Dropdown, type MenuProps } from 'antd';
 import {
   HomeOutlined,
   QuestionCircleOutlined,
-  FileTextOutlined,
   UploadOutlined,
   HistoryOutlined,
   BarChartOutlined,
@@ -11,7 +10,9 @@ import {
   UserOutlined,
   EyeOutlined,
   FolderOutlined,
+  BulbOutlined,
 } from '@ant-design/icons';
+import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -21,6 +22,7 @@ export const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
+  const [collapsed, setCollapsed] = useState(false);
 
   const menuItems: MenuProps['items'] = [
     {
@@ -107,13 +109,17 @@ export const MainLayout = () => {
         width={240}
         breakpoint="lg"
         collapsedWidth="80"
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
         style={{
           background: '#001529',
           position: 'fixed',
           left: 0,
           top: 0,
           bottom: 0,
-          overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <div
@@ -126,6 +132,7 @@ export const MainLayout = () => {
             fontSize: '22px',
             fontWeight: 'bold',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
+            flexShrink: 0,
           }}
         >
           Guideon
@@ -135,10 +142,33 @@ export const MainLayout = () => {
           mode="inline"
           selectedKeys={[location.pathname]}
           items={menuItems}
-          style={{ borderRight: 0 }}
+          style={{ borderRight: 0, flex: 1, overflowY: 'auto', paddingBottom: '80px' }}
         />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: collapsed ? '16px' : '16px',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: '8px',
+            color: 'rgba(255,255,255,0.65)',
+            background: '#001529',
+          }}
+        >
+          <BulbOutlined style={{ color: '#faad14', fontSize: 16, marginTop: 2, flexShrink: 0 }} />
+          {!collapsed && (
+            <span style={{ fontSize: 12, lineHeight: 1.6 }}>
+              팁: 이 챗봇은 사내 규정, 복지, 업무 프로세스에 대해 답변합니다.
+            </span>
+          )}
+        </div>
       </Sider>
-      <Layout style={{ marginLeft: 240 }}>
+      <Layout style={{ marginLeft: collapsed ? 80 : 240, transition: 'margin-left 0.2s' }}>
         <Header
           style={{
             padding: '0 48px',

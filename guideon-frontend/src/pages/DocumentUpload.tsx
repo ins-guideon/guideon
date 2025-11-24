@@ -9,9 +9,11 @@ import {
   message,
   Progress,
   Input,
+  Tooltip,
 } from 'antd';
 import {
   UploadOutlined,
+  QuestionCircleOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
@@ -20,6 +22,7 @@ import type { DocumentDetailResponse } from '@/types';
 import { REGULATION_TYPES } from '@/types';
 import type { UploadFile } from 'antd';
 import { NotificationModal } from '@/components/common/NotificationModal';
+import toast from 'react-hot-toast';
 
 const { Title, Paragraph, Text } = Typography;
 const { Option } = Select;
@@ -175,11 +178,7 @@ export const DocumentUpload = () => {
     mutationFn: ({ text, fileExtension }: { text: string; fileExtension?: string }) =>
       documentService.cleanText(text, fileExtension),
     onSuccess: ({ text }) => {
-      setNotificationModal({
-        open: true,
-        type: 'success',
-        message: '텍스트를 다듬었습니다.',
-      });
+      toast.success('텍스트 다듬기가 완료됬습니다.');
       setExtractedText(text);
     },
     onError: () => {
@@ -373,7 +372,7 @@ export const DocumentUpload = () => {
               ? '텍스트 추출 중...'
               : editMode
                 ? '텍스트 재추출'
-                : '업로드 후 텍스트 추출'}
+                : '텍스트 추출'}
           </Button>
 
           {(isExtracting || isExtractingFromId) && (
@@ -400,9 +399,6 @@ export const DocumentUpload = () => {
         >
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div>
-              <Text strong style={{ display: 'block', marginBottom: 12 }}>
-                추출된 텍스트
-              </Text>
               <TextArea
                 value={extractedText || ''}
                 onChange={(e) => setExtractedText(e.target.value)}
@@ -414,33 +410,51 @@ export const DocumentUpload = () => {
               </Text>
             </div>
 
-            <Space>
-              <Button onClick={handleCancel}>취소</Button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Button
                 onClick={handleCleanText}
                 loading={isCleaning}
                 disabled={!extractedText || !extractedText.trim()}
+                size="large"
               >
-                {isCleaning ? '다듬는 중...' : '다듬기'}
+                <Space size={4}>
+                  {isCleaning ? '다듬는 중...' : '다듬기'}
+                  <Tooltip title="추출된 텍스트를 파일 형식에 맞게 정제하고 정규화합니다.">
+                    <QuestionCircleOutlined style={{ fontSize: 14, cursor: 'help' }} />
+                  </Tooltip>
+                </Space>
               </Button>
-              {editMode ? (
-                <Button
-                  type="primary"
-                  loading={isUpdating}
-                  onClick={() => updateDocument()}
-                >
-                  {isUpdating ? '업데이트 중...' : '업데이트 및 저장'}
+              <Space>
+                <Button onClick={handleCancel} size="large">
+                  취소
                 </Button>
-              ) : (
-                <Button
-                  type="primary"
-                  loading={isUploading}
-                  onClick={() => uploadDocument()}
-                >
-                  {isUploading ? '업로드 중...' : '업로드 및 저장'}
-                </Button>
-              )}
-            </Space>
+                {editMode ? (
+                  <Button
+                    type="primary"
+                    size="large"
+                    loading={isUpdating}
+                    onClick={() => updateDocument()}
+                    style={{
+                      minWidth: 160,
+                    }}
+                  >
+                    {isUpdating ? '업데이트 중...' : '업데이트 및 저장'}
+                  </Button>
+                ) : (
+                  <Button
+                    type="primary"
+                    size="large"
+                    loading={isUploading}
+                    onClick={() => uploadDocument()}
+                    style={{
+                      minWidth: 160,
+                    }}
+                  >
+                    {isUploading ? '업로드 중...' : '업로드 및 저장'}
+                  </Button>
+                )}
+              </Space>
+            </div>
           </Space>
         </Card>
       )}

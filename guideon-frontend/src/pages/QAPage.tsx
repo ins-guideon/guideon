@@ -19,6 +19,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import toast from 'react-hot-toast';
 import { regulationService } from '@/services/regulationService';
 import type { RegulationSearchResult } from '@/types';
 import { DocumentDetailModal } from '@/components/common/DocumentDetailModal';
@@ -52,10 +53,14 @@ export const QAPage = () => {
     askQuestion(question);
   };
 
-  const handleCopyAnswer = () => {
+  const handleCopyAnswer = async () => {
     if (result) {
-      navigator.clipboard.writeText(result.answer);
-      message.success('답변이 클립보드에 복사되었습니다.');
+      try {
+        await navigator.clipboard.writeText(result.answer);
+        toast.success('클립보드에 복사되었습니다.');
+      } catch {
+        toast.error('복사에 실패했습니다.');
+      }
     }
   };
 
@@ -90,45 +95,68 @@ export const QAPage = () => {
       <div style={{ marginBottom: 32 }}>
         <Title level={2} style={{ marginBottom: 8 }}>질문하기</Title>
         <Paragraph type="secondary" style={{ fontSize: 15 }}>
-          규정에 대해 궁금한 점을 자연어로 질문해보세요.
+          사내 규정 관련 질문에 답변해드립니다.
         </Paragraph>
       </div>
 
       {/* 질문 입력 */}
-      <Card
+      <div
         style={{
           marginBottom: 32,
+          padding: '12px 16px',
+          backgroundColor: '#fff',
           border: '1px solid #e8e8e8',
-          borderRadius: 8,
+          borderRadius: 24,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 8,
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
         }}
-        bodyStyle={{ padding: 24 }}
       >
         <TextArea
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="예: 해외 출장시 숙박비는 얼마까지 지원되나요?"
-          autoSize={{ minRows: 4, maxRows: 8 }}
-          size="large"
+          onPressEnter={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+            if (e.shiftKey) {
+              return;
+            }
+            e.preventDefault();
+            handleSubmit();
+          }}
           disabled={isPending}
-          style={{ fontSize: 15 }}
+          bordered={false}
+          autoSize={{ minRows: 1, maxRows: 6 }}
+          style={{
+            flex: 1,
+            fontSize: 15,
+            padding: '4px 8px',
+            resize: 'none',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+          }}
         />
         <Button
           type="primary"
-          size="large"
           icon={<SendOutlined />}
           onClick={handleSubmit}
           loading={isPending}
+          shape="circle"
           style={{
-            marginTop: 16,
-            height: 48,
-            fontSize: 16,
-            fontWeight: 500,
+            width: 40,
+            height: 40,
+            minWidth: 40,
+            padding: 0,
+            backgroundColor: '#000',
+            borderColor: '#000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: '4px',
+            flexShrink: 0,
           }}
-          block
-        >
-          질문하기
-        </Button>
-      </Card>
+        />
+      </div>
 
       {/* 분석 결과 */}
       {result && (

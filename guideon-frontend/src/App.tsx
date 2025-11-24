@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider } from 'antd';
 import koKR from 'antd/locale/ko_KR';
+import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './stores/authStore';
 import { PrivateRoute } from './components/common/PrivateRoute';
 import { MainLayout } from './components/layout/MainLayout';
@@ -81,6 +82,30 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#fff',
+              color: '#333',
+            },
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#52c41a',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              duration: 4000,
+              iconTheme: {
+                primary: '#ff4d4f',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
       </ConfigProvider>
     </QueryClientProvider>
   );
