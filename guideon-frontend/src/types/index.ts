@@ -34,15 +34,6 @@ export interface RegulationSearchResult {
   timestamp?: string;
 }
 
-// 질문 이력
-export interface QuestionHistory {
-  id: string;
-  question: string;
-  result: RegulationSearchResult;
-  createdAt: string;
-  isFavorite: boolean;
-}
-
 // 규정 문서
 export interface RegulationDocument {
   id: string;
@@ -98,17 +89,6 @@ export const QUESTION_INTENTS = [
 ] as const;
 
 export type QuestionIntent = (typeof QUESTION_INTENTS)[number];
-
-// 통계 데이터
-export interface Statistics {
-  totalQuestions: number;
-  totalRegulations: number;
-  averageConfidence: number;
-  popularKeywords: Array<{ keyword: string; count: number }>;
-  questionsByDate: Array<{ date: string; count: number }>;
-  regulationUsage: Array<{ type: string; count: number }>;
-  satisfactionRate: number;
-}
 
 // API 응답 타입
 export interface ApiResponse<T> {

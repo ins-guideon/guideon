@@ -43,7 +43,17 @@ export const Login = () => {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1 style={{ fontSize: 32, fontWeight: 'bold', margin: 0 }}>Guideon</h1>
+          <img
+            src="/logo.svg"
+            alt="완나생"
+            style={{
+              height: '60px',
+              width: 'auto',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              marginBottom: 8,
+            }}
+          />
           <p style={{ color: '#666', marginTop: 8 }}>규정 Q&A 시스템</p>
         </div>
 

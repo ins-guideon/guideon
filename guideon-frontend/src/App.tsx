@@ -9,13 +9,10 @@ import { PrivateRoute } from './components/common/PrivateRoute';
 import { MainLayout } from './components/layout/MainLayout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { Dashboard } from './pages/Dashboard';
 import { QAPage } from './pages/QAPage';
 import { DocumentUpload } from './pages/DocumentUpload';
 import { DocumentView } from './pages/DocumentView';
 import { DocumentManagement } from './pages/DocumentManagement';
-import { History } from './pages/History';
-import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
 
 // React Query 클라이언트 생성
@@ -54,7 +51,6 @@ function App() {
                 </PrivateRoute>
               }
             >
-              <Route path="/" element={<Dashboard />} />
               <Route path="/qa" element={<QAPage />} />
               <Route
                 path="/documents"
@@ -73,13 +69,12 @@ function App() {
                   </PrivateRoute>
                 }
               />
-              <Route path="/history" element={<History />} />
-              <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
 
-            {/* 404 처리 */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* 404 처리 및 기본 라우트 */}
+            <Route path="/" element={<Navigate to="/qa" replace />} />
+            <Route path="*" element={<Navigate to="/qa" replace />} />
           </Routes>
         </BrowserRouter>
         <Toaster
