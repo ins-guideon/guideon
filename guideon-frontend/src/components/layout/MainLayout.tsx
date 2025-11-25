@@ -54,20 +54,20 @@ export const MainLayout = () => {
           },
         ]
       : []),
-    {
-      key: '/settings',
-      icon: <SettingOutlined />,
-      label: '설정',
-      onClick: () => navigate('/settings'),
-    },
+    ...(user?.role === 'ADMIN'
+      ? [
+          {
+            key: '/settings',
+            icon: <SettingOutlined />,
+            label: '설정',
+            onClick: () => navigate('/settings'),
+          },
+        ]
+      : []),
   ];
 
   const userMenuItems: MenuProps['items'] = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: '프로필',
-    },
+
     {
       type: 'divider',
     },

@@ -36,7 +36,6 @@ public class SecurityConfig {
                     "/actuator/**",
                     "/api/auth/login",
                     "/api/auth/register",
-                    "/api/auth/promote",
                     "/h2-console/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
@@ -44,6 +43,8 @@ public class SecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**"
                 ).permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/auth/promote").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))

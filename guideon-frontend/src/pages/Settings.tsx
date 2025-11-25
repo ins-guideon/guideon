@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Card, Form, Input, InputNumber, Button, message, Typography, Spin } from 'antd';
+import { Card, Form, Input, InputNumber, Button, message, Typography, Spin, Table, Tag, Select } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { settingsService } from '@/services/settingsService';
+import { userService } from '@/services/userService';
 import { NotificationModal } from '@/components/common/NotificationModal';
-import type { AppSettings } from '@/types';
+import type { AppSettings, User } from '@/types';
+import type { ColumnsType } from 'antd/es/table';
 
 const { Title, Paragraph } = Typography;
 
@@ -16,15 +18,20 @@ export const Settings = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'success' | 'error' | 'warning'>('success');
   const [modalMessage, setModalMessage] = useState('');
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [roleUpdatingId, setRoleUpdatingId] = useState<string | null>(null);
+  const [userPagination, setUserPagination] = useState({
+    current: 1,
+    pageSize: 10,
+  });
 
-  // 마운트 시 설정 조회
+  // 설정 로드
   useEffect(() => {
     const loadSettings = async () => {
       try {
         setInitialLoading(true);
         const serverSettings = await settingsService.getSettings();
-
-        // 서버에서 받은 설정으로 form 초기화
         form.setFieldsValue({
           apiKey: serverSettings.apiKey || '',
           searchModel: serverSettings.searchModel,
@@ -32,12 +39,9 @@ export const Settings = () => {
           chunkSize: serverSettings.chunkSize,
           chunkOverlap: serverSettings.chunkOverlap,
         });
-
-        // 로컬 스토어도 업데이트
         settings.updateSettings(serverSettings);
       } catch (error) {
         message.error(error instanceof Error ? error.message : '설정을 불러오는 중 오류가 발생했습니다.');
-        // 오류 발생 시 로컬 스토어의 기본값 사용
         form.setFieldsValue({
           apiKey: settings.apiKey || '',
           searchModel: settings.searchModel,
@@ -53,6 +57,27 @@ export const Settings = () => {
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 사용자 목록 로드
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setUsersLoading(true);
+        const serverUsers = await userService.getUsers();
+        setUsers(serverUsers);
+      } catch (error) {
+        message.error(error instanceof Error ? error.message : '사용자 목록을 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    loadUsers();
+  }, []);
+
+  useEffect(() => {
+    setUserPagination((prev) => ({ ...prev, current: 1 }));
+  }, [users.length]);
 
   const handleSave = async (values: AppSettings) => {
     try {
@@ -82,6 +107,70 @@ export const Settings = () => {
     settings.resetSettings();
     form.setFieldsValue(settings);
     message.info('설정이 초기화되었습니다.');
+  };
+
+  const handleRoleChange = async (userId: string, role: User['role']) => {
+    try {
+      setRoleUpdatingId(userId);
+      const updated = await userService.updateUserRole(userId, role);
+      setUsers((prev) => prev.map((user) => (user.id === userId ? updated : user)));
+      message.success('사용자 역할이 변경되었습니다.');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '사용자 역할 변경 중 오류가 발생했습니다.');
+    } finally {
+      setRoleUpdatingId(null);
+    }
+  };
+
+  const userColumns: ColumnsType<User> = [
+    {
+      title: '아이디',
+      dataIndex: 'username',
+      key: 'username',
+    },
+    {
+      title: '이름',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: '이메일',
+      dataIndex: 'email',
+      key: 'email',
+    },
+    {
+      title: '현재 권한',
+      dataIndex: 'role',
+      key: 'role',
+      render: (role: User['role']) => (
+        <Tag color={role === 'ADMIN' ? 'red' : 'blue'}>{role}</Tag>
+      ),
+    },
+    {
+      title: '권한 변경',
+      key: 'actions',
+      render: (_, record) => (
+        <Select
+          value={record.role}
+          style={{ width: 160 }}
+          onChange={(value) => handleRoleChange(record.id, value)}
+          options={[
+            { label: '관리자', value: 'ADMIN' },
+            { label: '일반 사용자', value: 'USER' },
+          ]}
+          loading={roleUpdatingId === record.id}
+          disabled={roleUpdatingId === record.id}
+        />
+      ),
+    },
+  ];
+
+  const handleUserTableChange = (paginationConfig: { current?: number; pageSize?: number }) => {
+    setUserPagination((prev) => ({
+      ...prev,
+      current: paginationConfig.current ?? prev.current,
+      pageSize: paginationConfig.pageSize ?? prev.pageSize,
+    }));
   };
 
   return (
@@ -186,6 +275,28 @@ export const Settings = () => {
             </Form.Item>
           </Form>
         )}
+      </Card>
+
+      <Card style={{ marginTop: 24 }}>
+        <Title level={3}>사용자 권한 관리</Title>
+        <Paragraph type="secondary">
+          등록된 사용자와 역할을 확인하고 권한을 변경할 수 있습니다.
+        </Paragraph>
+        <Table<User>
+          rowKey="id"
+          loading={usersLoading}
+          dataSource={users}
+          columns={userColumns}
+          pagination={{
+            current: userPagination.current,
+            pageSize: userPagination.pageSize,
+            total: users.length,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50', '100'],
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total}`,
+          }}
+          onChange={handleUserTableChange}
+        />
       </Card>
 
       <NotificationModal

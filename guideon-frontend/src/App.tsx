@@ -69,7 +69,14 @@ function App() {
                   </PrivateRoute>
                 }
               />
-              <Route path="/settings" element={<Settings />} />
+              <Route
+                path="/settings"
+                element={
+                  <PrivateRoute roles={['ADMIN']}>
+                    <Settings />
+                  </PrivateRoute>
+                }
+              />
             </Route>
 
             {/* 404 처리 및 기본 라우트 */}
