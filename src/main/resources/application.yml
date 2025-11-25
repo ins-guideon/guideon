@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
   servlet:
     context-path: /
     encoding:
@@ -48,7 +48,7 @@ spring:
 # Google Gemini API Configuration
 gemini:
   api:
-    key: ${GOOGLE_API_KEY:AIzaSyDON4b4pkFQqAhiEiB3e_KrHCjK9kq32Y0}
+    key: AIzaSyBWZ83Rm7M2MQc_RZdg24NC9KsS-OMYtks
 
 # Cohere API Configuration (for ReRanking)
 cohere:

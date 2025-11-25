@@ -1,11 +1,8 @@
 import { Layout, Menu, Avatar, Dropdown, type MenuProps } from 'antd';
 import {
-  HomeOutlined,
   QuestionCircleOutlined,
   FileTextOutlined,
   UploadOutlined,
-  HistoryOutlined,
-  BarChartOutlined,
   SettingOutlined,
   LogoutOutlined,
   UserOutlined,
@@ -23,12 +20,6 @@ export const MainLayout = () => {
   const { user, logout } = useAuthStore();
 
   const menuItems: MenuProps['items'] = [
-    {
-      key: '/',
-      icon: <HomeOutlined />,
-      label: '대시보드',
-      onClick: () => navigate('/'),
-    },
     {
       key: '/qa',
       icon: <QuestionCircleOutlined />,
@@ -61,18 +52,6 @@ export const MainLayout = () => {
           },
         ]
       : []),
-    {
-      key: '/history',
-      icon: <HistoryOutlined />,
-      label: '검색 이력',
-      onClick: () => navigate('/history'),
-    },
-    {
-      key: '/analytics',
-      icon: <BarChartOutlined />,
-      label: '통계',
-      onClick: () => navigate('/analytics'),
-    },
     {
       key: '/settings',
       icon: <SettingOutlined />,
@@ -122,13 +101,20 @@ export const MainLayout = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'white',
-            fontSize: '22px',
-            fontWeight: 'bold',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
+            padding: '8px',
           }}
         >
-          Guideon
+          <img
+            src="/logo.svg"
+            alt="완나생"
+            style={{
+              height: '160px',
+              width: 'auto',
+              maxWidth: '100%',
+              objectFit: 'contain',
+            }}
+          />
         </div>
         <Menu
           theme="dark"
