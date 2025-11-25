@@ -16,7 +16,7 @@ import {
   QuestionCircleOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { documentService } from '@/services/documentService';
 import type { DocumentDetailResponse } from '@/types';
 import { REGULATION_TYPES } from '@/types';
@@ -31,6 +31,7 @@ const { TextArea } = Input;
 export const DocumentUpload = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<string>('');
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [extractedText, setExtractedText] = useState<string | null>(null);
@@ -117,11 +118,6 @@ export const DocumentUpload = () => {
       return documentService.uploadDocument(file, selectedType, extractedText);
     },
     onSuccess: () => {
-      setNotificationModal({
-        open: true,
-        type: 'success',
-        message: '문서가 성공적으로 업로드되고 인덱싱되었습니다.',
-      });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documents-view'] });
       setExtractedText(null);
@@ -129,6 +125,10 @@ export const DocumentUpload = () => {
       setFileList([]);
       setEditMode(false);
       setEditingDocumentId(null);
+      // 문서 관리 페이지로 이동하면서 업로드 성공 상태 전달
+      navigate('/documents/manage', {
+        state: { uploadSuccess: true },
+      });
     },
     onError: (error) => {
       setNotificationModal({

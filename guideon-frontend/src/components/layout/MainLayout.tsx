@@ -28,6 +28,12 @@ export const MainLayout = () => {
       label: '질문하기',
       onClick: () => navigate('/qa'),
     },
+    {
+      key: '/documents/view',
+      icon: <EyeOutlined />,
+      label: '문서 조회',
+      onClick: () => navigate('/documents/view'),
+    },
     ...(user?.role === 'ADMIN'
       ? [
           {
@@ -38,12 +44,6 @@ export const MainLayout = () => {
           },
         ]
       : []),
-    {
-      key: '/documents/view',
-      icon: <EyeOutlined />,
-      label: '문서 조회',
-      onClick: () => navigate('/documents/view'),
-    },
     ...(user?.role === 'ADMIN'
       ? [
           {

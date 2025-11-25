@@ -17,7 +17,8 @@ import {
     EditOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { documentService } from '@/services/documentService';
 import type { DocumentInfo, DocumentDetailResponse } from '@/types';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -29,6 +30,7 @@ const { Title, Text } = Typography;
 
 export const DocumentManagement = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const queryClient = useQueryClient();
     const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
@@ -43,6 +45,21 @@ export const DocumentManagement = () => {
         type: 'success',
         message: '',
     });
+
+    // 업로드 성공 시 모달 표시
+    useEffect(() => {
+        const state = location.state as { uploadSuccess?: boolean } | null;
+        if (state?.uploadSuccess) {
+            setNotificationModal({
+                open: true,
+                type: 'success',
+                message: '문서가 성공적으로 업로드되고 인덱싱되었습니다.',
+            });
+            // state를 초기화하여 뒤로가기 시 다시 모달이 표시되지 않도록 함
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.state]);
 
     // 문서 목록 조회 - 페이지가 열릴 때마다 항상 최신 데이터를 가져옴
     const { data: documentList, isLoading } = useQuery({
