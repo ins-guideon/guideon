@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Form, Input, Button, Card, Checkbox, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -42,19 +41,20 @@ export const Login = () => {
           boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <img
-            src="/logo.svg"
+            src="/logo-login.svg"
             alt="완나생"
             style={{
-              height: '60px',
+              height: '160px',
               width: 'auto',
               maxWidth: '100%',
               objectFit: 'contain',
-              marginBottom: 8,
+              marginBottom: 2,
+              marginTop: -30,
             }}
           />
-          <p style={{ color: '#666', marginTop: 8 }}>규정 Q&A 시스템</p>
+          <p style={{ color: '#666', marginTop: 2 }}>AI기반 사내 규정 Q&A 시스템</p>
         </div>
 
         <Form
