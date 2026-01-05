@@ -2,7 +2,6 @@ import { Modal, Descriptions, Tag, Card, Space, Typography } from 'antd';
 import { FileTextOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { documentService } from '@/services/documentService';
-import type { DocumentDetailResponse } from '@/types';
 import dayjs from 'dayjs';
 import { LoadingSpinner } from './LoadingSpinner';
 

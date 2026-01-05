@@ -20,7 +20,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { documentService } from '@/services/documentService';
-import type { DocumentInfo, DocumentDetailResponse } from '@/types';
+import type { DocumentInfo } from '@/types';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { DocumentDetailModal } from '@/components/common/DocumentDetailModal';
 import { NotificationModal } from '@/components/common/NotificationModal';

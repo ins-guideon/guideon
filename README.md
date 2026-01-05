@@ -65,7 +65,7 @@ ReRanking (Cohere)
 ## 📦 기술 스택
 
 ### Backend
-- **Java 17+**
+- **Java 21+**
 - **Spring Boot 3.2**: REST API 서버
 - **LangChain4j 0.36.2**: LLM 오케스트레이션 및 RAG 구현
 - **Google Gemini API**:

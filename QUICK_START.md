@@ -2,7 +2,7 @@
 
 ## 📋 요구사항
 
-- ✅ **Java 17 이상**
+- ✅ **Java 21 이상**
 - ✅ **Maven 3.6+**
 - ✅ **Node.js 18+** (프론트엔드용)
 - ✅ **Google Gemini API Key**
@@ -89,8 +89,8 @@ curl -X POST http://localhost:8080/api/qa/search \
 # JAVA_HOME 확인
 mvn -version
 
-# Java 8이면 Java 17로 변경
-set JAVA_HOME=C:\Program Files\Java\jdk-17
+# Java 8이면 Java 21로 변경
+set JAVA_HOME=C:\Program Files\Java\jdk-21
 set PATH=%JAVA_HOME%\bin;%PATH%
 ```
 

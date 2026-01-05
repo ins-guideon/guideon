@@ -5,7 +5,6 @@ import {
   Typography,
   Space,
   Tag,
-  message,
 } from 'antd';
 import {
   FileTextOutlined,

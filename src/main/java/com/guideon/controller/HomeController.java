@@ -1,22 +1,33 @@
 package com.guideon.controller;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Home Controller - API 정보 및 헬스 체크
+ * Home Controller - 프론트엔드 정적 파일 서빙 및 API 정보
  */
-@RestController
+@Controller
 public class HomeController {
 
     /**
-     * 루트 경로 - API 정보 반환
+     * 프론트엔드 엔트리 포인트 (index.html)
+     * API, H2 콘솔, Swagger 등을 제외한 모든 경로를 index.html로 포워딩 (SPA 지원)
      */
-    @GetMapping("/")
-    public Map<String, Object> home() {
+    @GetMapping(value = {"/", "/{path:[^\\.]*}", "/**/{path:[^\\.]*}"})
+    public String index() {
+        return "forward:/index.html";
+    }
+
+    /**
+     * API 정보 반환 (기존 기능 유지 - 경로 변경)
+     */
+    @GetMapping("/api/info")
+    @ResponseBody
+    public Map<String, Object> apiInfo() {
         Map<String, Object> info = new HashMap<>();
         info.put("name", "Guideon - AI-powered Regulation Search System");
         info.put("version", "1.0.0");
@@ -36,9 +47,10 @@ public class HomeController {
     }
 
     /**
-     * 헬스 체크 (간단한 버전)
+     * 헬스 체크
      */
     @GetMapping("/health")
+    @ResponseBody
     public Map<String, String> health() {
         Map<String, String> status = new HashMap<>();
         status.put("status", "UP");

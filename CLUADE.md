@@ -28,7 +28,7 @@ LangChain4j와 벡터 데이터베이스(Vector DB)를 활용하여, **정확한
 ---
 
 ## 🏗 아키텍처
-- **Java 17+**  
+- **Java 21+**  
 - **LangChain4j** : LLM 호출 및 RAG(Retrieval Augmented Generation) 오케스트레이션
 - **Google Gemini API** : LLM 모델 (질의응답)
 - **벡터 DB** : Qdrant (기본)

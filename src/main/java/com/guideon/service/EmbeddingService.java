@@ -19,7 +19,6 @@ public class EmbeddingService {
 
     public EmbeddingService(ConfigLoader config) {
         String apiKey = config.getGeminiApiKey();
-
         this.embeddingModel = GoogleAiEmbeddingModel.builder()
                 .apiKey(apiKey)
                 .modelName("text-embedding-004")
