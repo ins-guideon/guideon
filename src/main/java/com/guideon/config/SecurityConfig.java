@@ -47,6 +47,7 @@ public class SecurityConfig {
                     "/actuator/**",
                     "/api/auth/login",
                     "/api/auth/register",
+                    "/api/auth/email-verification/**",
                     "/h2-console/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",

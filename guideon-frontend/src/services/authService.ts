@@ -83,6 +83,22 @@ export const authService = {
     return response.data;
   },
 
+  // 이메일 인증번호 요청
+  requestEmailVerification: async (email: string): Promise<void> => {
+    const response = await api.post<ApiResponse<string>>('/auth/email-verification/request', { email });
+    if (!response.success) {
+      throw new Error(response.message || '인증번호 발송에 실패했습니다.');
+    }
+  },
+
+  // 이메일 인증번호 확인
+  verifyEmailCode: async (email: string, code: string): Promise<void> => {
+    const response = await api.post<ApiResponse<string>>('/auth/email-verification/verify', { email, code });
+    if (!response.success) {
+      throw new Error(response.message || '인증번호가 올바르지 않습니다.');
+    }
+  },
+
   // 현재 사용자 정보 조회
   getCurrentUser: async (): Promise<User> => {
     const response = await api.get<ApiResponse<User>>('/auth/me');

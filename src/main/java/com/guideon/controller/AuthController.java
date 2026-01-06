@@ -5,7 +5,9 @@ import com.guideon.dto.LoginRequest;
 import com.guideon.dto.LoginResponse;
 import com.guideon.dto.RegisterRequest;
 import com.guideon.dto.UserDTO;
+import com.guideon.dto.EmailVerificationRequest;
 import com.guideon.service.AuthService;
+import com.guideon.service.EmailVerificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -22,9 +24,36 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
+    private final EmailVerificationService emailVerificationService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, EmailVerificationService emailVerificationService) {
         this.authService = authService;
+        this.emailVerificationService = emailVerificationService;
+    }
+
+    @Operation(summary = "이메일 인증번호 발송", description = "회원가입을 위한 인증번호를 이메일로 발송합니다.")
+    @PostMapping("/email-verification/request")
+    public ApiResponse<String> requestEmailVerification(@Valid @RequestBody EmailVerificationRequest request) {
+        logger.info("이메일 인증번호 요청: {}", request.getEmail());
+        try {
+            emailVerificationService.sendCode(request.getEmail());
+            return ApiResponse.success("인증번호가 발송되었습니다.");
+        } catch (Exception e) {
+            logger.error("이메일 인증번호 발송 실패: {}", request.getEmail(), e);
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "이메일 인증번호 확인", description = "발송된 인증번호가 일치하는지 확인합니다.")
+    @PostMapping("/email-verification/verify")
+    public ApiResponse<String> verifyEmailCode(@Valid @RequestBody EmailVerificationRequest request) {
+        logger.info("이메일 인증번호 확인 요청: {}", request.getEmail());
+        boolean isVerified = emailVerificationService.verifyCode(request.getEmail(), request.getCode());
+        if (isVerified) {
+            return ApiResponse.success("이메일 인증에 성공했습니다.");
+        } else {
+            return ApiResponse.error("인증번호가 올바르지 않거나 만료되었습니다.");
+        }
     }
 
     @Operation(summary = "로그인", description = "사용자 로그인 후 JWT 토큰을 발급받습니다.")

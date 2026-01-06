@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, message } from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined, IdcardOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, message, Row, Col } from 'antd';
+import { UserOutlined, LockOutlined, MailOutlined, IdcardOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
 
@@ -8,6 +8,10 @@ export const Register = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
   const onFinish = async (values: {
@@ -16,6 +20,11 @@ export const Register = () => {
     name: string;
     email: string;
   }) => {
+    if (!isEmailVerified) {
+      messageApi.error('이메일 인증이 필요합니다.');
+      return;
+    }
+
     setIsLoading(true);
     try {
       await authService.register(values);
@@ -25,6 +34,46 @@ export const Register = () => {
       messageApi.error(error instanceof Error ? error.message : '회원가입에 실패했습니다.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRequestVerification = async () => {
+    try {
+      const email = form.getFieldValue('email');
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        messageApi.error('유효한 이메일을 입력해주세요.');
+        return;
+      }
+
+      setIsEmailSending(true);
+      await authService.requestEmailVerification(email);
+      messageApi.success('인증번호가 발송되었습니다.');
+      setVerificationSent(true);
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : '인증번호 발송에 실패했습니다.');
+    } finally {
+      setIsEmailSending(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    try {
+      const email = form.getFieldValue('email');
+      const code = form.getFieldValue('verificationCode');
+
+      if (!code) {
+        messageApi.error('인증번호를 입력해주세요.');
+        return;
+      }
+
+      setIsVerifying(true);
+      await authService.verifyEmailCode(email, code);
+      messageApi.success('이메일 인증에 성공했습니다.');
+      setIsEmailVerified(true);
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : '인증번호가 올바르지 않습니다.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -42,7 +91,7 @@ export const Register = () => {
     >
       <Card
         style={{
-          width: 400,
+          width: 450,
           boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
         }}
       >
@@ -70,12 +119,74 @@ export const Register = () => {
             <Input prefix={<IdcardOutlined />} placeholder="이름" />
           </Form.Item>
 
-          <Form.Item name="email" rules={[{ required: true, message: '이메일을 입력해주세요.' }, { type: 'email', message: '유효한 이메일을 입력해주세요.' }]}>
-            <Input prefix={<MailOutlined />} placeholder="이메일" />
-          </Form.Item>
+          <div style={{ marginBottom: 24 }}>
+            <Row gutter={8}>
+              <Col span={17}>
+                <Form.Item
+                  name="email"
+                  rules={[
+                    { required: true, message: '이메일을 입력해주세요.' },
+                    { type: 'email', message: '유효한 이메일을 입력해주세요.' }
+                  ]}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Input prefix={<MailOutlined />} placeholder="이메일" disabled={isEmailVerified} />
+                </Form.Item>
+              </Col>
+              <Col span={7}>
+                <Button 
+                  onClick={handleRequestVerification} 
+                  loading={isEmailSending} 
+                  disabled={isEmailVerified}
+                  style={{ width: '100%' }}
+                >
+                  {verificationSent ? '재발송' : '인증요청'}
+                </Button>
+              </Col>
+            </Row>
+          </div>
+
+          {verificationSent && !isEmailVerified && (
+            <div style={{ marginBottom: 24 }}>
+              <Row gutter={8}>
+                <Col span={17}>
+                  <Form.Item
+                    name="verificationCode"
+                    rules={[{ required: true, message: '인증번호를 입력해주세요.' }]}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <Input prefix={<SafetyCertificateOutlined />} placeholder="인증번호 6자리" />
+                  </Form.Item>
+                </Col>
+                <Col span={7}>
+                  <Button 
+                    type="primary"
+                    onClick={handleVerifyCode} 
+                    loading={isVerifying}
+                    style={{ width: '100%' }}
+                  >
+                    확인
+                  </Button>
+                </Col>
+              </Row>
+            </div>
+          )}
+
+          {isEmailVerified && (
+            <p style={{ color: '#52c41a', marginBottom: 24, textAlign: 'center' }}>
+              ✓ 이메일 인증이 완료되었습니다.
+            </p>
+          )}
 
           <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
-            <Button type="primary" htmlType="submit" loading={isLoading} block style={{ height: 48 }}>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              loading={isLoading} 
+              block 
+              style={{ height: 48 }}
+              disabled={!isEmailVerified}
+            >
               가입하기
             </Button>
           </Form.Item>

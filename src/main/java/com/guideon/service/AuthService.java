@@ -18,11 +18,14 @@ public class AuthService {
     private final UserAccountRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailVerificationService emailVerificationService;
 
-    public AuthService(UserAccountRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+    public AuthService(UserAccountRepository userRepository, PasswordEncoder passwordEncoder, 
+                       JwtTokenProvider jwtTokenProvider, EmailVerificationService emailVerificationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @Transactional
@@ -32,6 +35,11 @@ public class AuthService {
         }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
+        
+        // 이메일 인증 여부 확인
+        if (!emailVerificationService.isEmailVerified(request.getEmail())) {
+            throw new IllegalArgumentException("이메일 인증이 완료되지 않았습니다.");
         }
 
         String passwordHash = passwordEncoder.encode(request.getPassword());
