@@ -6,6 +6,11 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+  ssl:
+    enabled: true
+    certificate: classpath:cloudedi.net.crt
+    certificate-private-key: classpath:cloudedi.net.key
+    trust-certificate: classpath:ca_bundle.cer
   error:
     include-message: always
     include-stacktrace: on_param
