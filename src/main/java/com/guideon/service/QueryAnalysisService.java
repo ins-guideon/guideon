@@ -1,6 +1,6 @@
 package com.guideon.service;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.config.RegulationInferenceConfigLoader;
 import com.guideon.model.QueryAnalysisResult;
 import com.guideon.model.prompt.FewShotExample;
@@ -27,39 +27,29 @@ public class QueryAnalysisService {
     private boolean useFewShotExamples = true; // Few-shot 예제 사용 여부 (테스트용)
 
     /**
-     * application.properties 기반 생성자
+     * GuideonProperties 기반 생성자
      */
-    public QueryAnalysisService(ConfigLoader config) {
-        String apiKey = config.getGeminiApiKey();
+    public QueryAnalysisService(GuideonProperties properties) {
+        String apiKey = properties.getGemini().getApi().getKey();
+        String modelName = properties.getGemini().getChat().getModelName();
+        Double temperature = properties.getGemini().getChat().getTemperature();
 
         this.chatModel = GoogleAiGeminiChatModel.builder()
                 .apiKey(apiKey)
-                .modelName("gemini-2.5-flash")
-                .temperature(0.3) // 일관된 분석을 위해 낮은 temperature
+                .modelName(modelName)
+                .temperature(temperature) // 설정값 사용
                 .build();
 
-        // Properties 파일에서 규정 유형 로드
-        String typesStr = config.getProperty("regulation.types", "");
-        if (typesStr.isEmpty()) {
+        // 설정 파일에서 규정 유형 로드
+        List<String> types = properties.getRegulation().getTypes();
+        if (types == null || types.isEmpty()) {
             this.regulationTypes = getDefaultRegulationTypes();
         } else {
-            this.regulationTypes = Arrays.asList(typesStr.split(","));
+            this.regulationTypes = types;
         }
 
-        logger.info("QueryAnalysisService initialized with {} regulation types", regulationTypes.size());
-    }
-
-    /**
-     * API 키 직접 전달 생성자 (하위 호환성)
-     */
-    @Deprecated
-    public QueryAnalysisService(String apiKey) {
-        this.chatModel = GoogleAiGeminiChatModel.builder()
-                .apiKey(apiKey)
-                .modelName("gemini-2.5-flash")
-                .temperature(0.3)
-                .build();
-        this.regulationTypes = getDefaultRegulationTypes();
+        logger.info("QueryAnalysisService initialized with {} regulation types and model {}", 
+                regulationTypes.size(), modelName);
     }
 
     /**

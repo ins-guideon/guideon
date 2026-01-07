@@ -1,6 +1,6 @@
 package com.guideon.service;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.googleai.GoogleAiEmbeddingModel;
@@ -17,15 +17,17 @@ public class EmbeddingService {
 
     private final EmbeddingModel embeddingModel;
 
-    public EmbeddingService(ConfigLoader config) {
-        String apiKey = config.getGeminiApiKey();
+    public EmbeddingService(GuideonProperties properties) {
+        String apiKey = properties.getGemini().getApi().getKey();
+        String modelName = properties.getEmbedding().getModel().getName();
+        
         this.embeddingModel = GoogleAiEmbeddingModel.builder()
                 .apiKey(apiKey)
-                .modelName("text-embedding-004")
+                .modelName(modelName)
                 .maxRetries(3)
                 .build();
 
-        logger.info("EmbeddingService initialized with Google AI Embedding Model");
+        logger.info("EmbeddingService initialized with model: {}", modelName);
     }
 
     /**

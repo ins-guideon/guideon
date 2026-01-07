@@ -1,6 +1,6 @@
 package com.guideon;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.model.QueryAnalysisResult;
 import com.guideon.model.RegulationSearchResult;
 import com.guideon.service.QueryAnalysisService;
@@ -10,55 +10,34 @@ import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
  * 규정 Q&A 시스템 메인 클래스
- * CLUADE.md 아키텍처 기반 (Java + LangChain4j + Gemini)
+ * Spring Bean으로 등록되어 자동 설정된 서비스들을 사용합니다.
  */
+@Component
 public class RegulationQASystem {
     private static final Logger logger = LoggerFactory.getLogger(RegulationQASystem.class);
 
     private final QueryAnalysisService queryAnalysisService;
     private final RegulationSearchService regulationSearchService;
-    private final ConfigLoader config;
+    private final GuideonProperties properties;
 
     /**
-     * application.properties 기반 생성자
+     * Spring 의존성 주입을 위한 생성자
      */
-    public RegulationQASystem() {
-        this.config = new ConfigLoader();
-        this.queryAnalysisService = new QueryAnalysisService(config);
-        // Hybrid Search는 Spring Bean 컨텍스트에서만 사용 가능
-        this.regulationSearchService = new RegulationSearchService(config, null);
-
-        logger.info("RegulationQASystem initialized from application.properties (Hybrid Search disabled)");
-    }
-
-    /**
-     * 커스텀 설정 파일 경로를 사용하는 생성자
-     */
-    public RegulationQASystem(String configFilePath) {
-        this.config = new ConfigLoader(configFilePath);
-        this.queryAnalysisService = new QueryAnalysisService(config);
-        // Hybrid Search는 Spring Bean 컨텍스트에서만 사용 가능
-        this.regulationSearchService = new RegulationSearchService(config, null);
-
-        logger.info("RegulationQASystem initialized from: {} (Hybrid Search disabled)", configFilePath);
-    }
-
-    /**
-     * ConfigLoader를 직접 전달받는 생성자
-     */
-    public RegulationQASystem(ConfigLoader config) {
-        this.config = config;
-        this.queryAnalysisService = new QueryAnalysisService(config);
-        // Hybrid Search는 Spring Bean 컨텍스트에서만 사용 가능
-        this.regulationSearchService = new RegulationSearchService(config, null);
-
-        logger.info("RegulationQASystem initialized with provided ConfigLoader (Hybrid Search disabled)");
+    public RegulationQASystem(
+            QueryAnalysisService queryAnalysisService,
+            RegulationSearchService regulationSearchService,
+            GuideonProperties properties) {
+        this.queryAnalysisService = queryAnalysisService;
+        this.regulationSearchService = regulationSearchService;
+        this.properties = properties;
+        logger.info("RegulationQASystem initialized as Spring Component");
     }
 
     /**
@@ -150,70 +129,5 @@ public class RegulationQASystem {
                 "- Indexed Segments: %d",
                 regulationSearchService.getIndexedSegmentsCount()
         );
-    }
-
-    /**
-     * 메인 메서드 - 사용 예시
-     */
-    public static void main(String[] args) {
-        try {
-            // 시스템 초기화 - application.properties에서 설정 로드
-            RegulationQASystem system;
-
-            if (args.length > 0) {
-                // 커맨드 라인 인자로 설정 파일 경로가 제공된 경우
-                String configPath = args[0];
-                logger.info("Using configuration file: {}", configPath);
-                system = new RegulationQASystem(configPath);
-            } else {
-                // 기본 application.properties 사용
-                logger.info("Using default application.properties");
-                system = new RegulationQASystem();
-            }
-
-            // 사용 예시 1: 규정 문서 업로드
-            // system.uploadRegulationDocument("path/to/취업규칙.txt", "취업규칙");
-
-            // 사용 예시 2: 질의응답
-            String question = "연차 휴가는 몇 일인가요?";
-            RegulationSearchResult result = system.askQuestion(question);
-
-            // 결과 출력
-            System.out.println("\n=== 질문 ===");
-            System.out.println(question);
-
-            System.out.println("\n=== 답변 ===");
-            System.out.println(result.getAnswer());
-
-            System.out.println("\n=== 근거 조항 ===");
-            if (result.getReferences().isEmpty()) {
-                System.out.println("관련 규정을 찾을 수 없습니다.");
-            } else {
-                result.getReferences().forEach(ref -> {
-                    System.out.printf("- %s (관련도: %.2f)\n",
-                            ref.getDocumentName(),
-                            ref.getRelevanceScore());
-                    System.out.printf("  내용: %s\n\n",
-                            ref.getContent().substring(0, Math.min(100, ref.getContent().length())) + "...");
-                });
-            }
-
-            System.out.printf("\n신뢰도: %.2f%%\n", result.getConfidenceScore() * 100);
-
-        } catch (IllegalStateException e) {
-            // API 키 미설정 등의 설정 오류
-            logger.error("Configuration error: {}", e.getMessage());
-            System.err.println("\nError: " + e.getMessage());
-            System.err.println("\n설정 방법:");
-            System.err.println("1. application.properties 파일에 gemini.api.key 설정");
-            System.err.println("2. 환경변수 GOOGLE_API_KEY 설정");
-            System.err.println("3. 커맨드 라인으로 설정 파일 지정: java -jar app.jar custom.properties");
-            System.exit(1);
-        } catch (Exception e) {
-            logger.error("Unexpected error occurred", e);
-            System.err.println("\nUnexpected error: " + e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-        }
     }
 }

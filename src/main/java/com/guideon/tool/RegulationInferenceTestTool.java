@@ -1,6 +1,10 @@
 package com.guideon.tool;
 
 import com.guideon.config.RegulationInferenceConfigLoader;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
 import java.util.List;
 
@@ -9,10 +13,18 @@ import java.util.List;
  *
  * regulation-inference-rules.yaml 설정을 로드하고
  * 다양한 쿼리에 대한 추론 결과를 테스트
+ * Spring Boot 환경에서 실행됩니다.
  */
-public class RegulationInferenceTestTool {
+@SpringBootApplication
+@ComponentScan(basePackages = "com.guideon")
+public class RegulationInferenceTestTool implements CommandLineRunner {
 
     public static void main(String[] args) {
+        SpringApplication.run(RegulationInferenceTestTool.class, args);
+    }
+
+    @Override
+    public void run(String... args) {
         System.out.println("╔════════════════════════════════════════════════════════╗");
         System.out.println("║  Regulation Inference Configuration Test Tool        ║");
         System.out.println("╚════════════════════════════════════════════════════════╝");

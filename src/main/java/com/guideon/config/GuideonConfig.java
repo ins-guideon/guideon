@@ -16,39 +16,37 @@ import java.io.IOException;
 @Configuration
 public class GuideonConfig {
 
-    /**
-     * ConfigLoader Bean
-     */
-    @Bean
-    public ConfigLoader configLoader() {
-        return new ConfigLoader();
+    private final GuideonProperties properties;
+
+    public GuideonConfig(GuideonProperties properties) {
+        this.properties = properties;
     }
 
     /**
      * 질문 분석 서비스 Bean
      */
     @Bean
-    public QueryAnalysisService queryAnalysisService(ConfigLoader configLoader) {
-        return new QueryAnalysisService(configLoader);
+    public QueryAnalysisService queryAnalysisService() {
+        return new QueryAnalysisService(properties);
     }
 
     /**
      * EmbeddingService Bean
      */
     @Bean
-    public EmbeddingService embeddingService(ConfigLoader configLoader) {
-        return new EmbeddingService(configLoader);
+    public EmbeddingService embeddingService() {
+        return new EmbeddingService(properties);
     }
 
     /**
      * BM25 검색 서비스 Bean
      */
     @Bean
-    public BM25SearchService bm25SearchService(ConfigLoader configLoader) throws IOException {
-        if (configLoader.isHybridSearchEnabled()) {
+    public BM25SearchService bm25SearchService() throws IOException {
+        if (properties.getHybrid().getSearch().getEnabled()) {
             org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
                 .info("Initializing BM25SearchService for Hybrid Search");
-            return new BM25SearchService(configLoader);
+            return new BM25SearchService(properties);
         } else {
             org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
                 .info("Hybrid Search is disabled, BM25SearchService will not be initialized");
@@ -61,11 +59,10 @@ public class GuideonConfig {
      */
     @Bean
     public HybridSearchService hybridSearchService(
-            ConfigLoader configLoader,
             BM25SearchService bm25SearchService,
             EmbeddingService embeddingService) {
 
-        if (configLoader.isHybridSearchEnabled() && bm25SearchService != null) {
+        if (properties.getHybrid().getSearch().getEnabled() && bm25SearchService != null) {
             org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
                 .info("Initializing HybridSearchService");
 
@@ -75,7 +72,7 @@ public class GuideonConfig {
                 bm25SearchService,
                 embeddingStore,
                 embeddingService,
-                configLoader
+                properties
             );
         } else {
             org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
@@ -89,18 +86,17 @@ public class GuideonConfig {
      */
     @Bean
     public RegulationSearchService regulationSearchService(
-            ConfigLoader configLoader,
             VectorStoreService vectorStoreService,
             HybridSearchService hybridSearchService) {
 
-        RegulationSearchService service = new RegulationSearchService(configLoader, hybridSearchService);
+        RegulationSearchService service = new RegulationSearchService(properties, hybridSearchService);
 
         // 서버 시작 시 저장된 벡터 데이터 로드
         try {
             InMemoryEmbeddingStore<TextSegment> store = vectorStoreService.loadEmbeddingStore();
 
             // 임베딩 차원 검증 (기존 데이터와 새 모델의 차원이 다르면 초기화)
-            int configuredDimension = configLoader.getEmbeddingDimension();
+            int configuredDimension = properties.getEmbedding().getDimension();
             if (store != null && !isEmbeddingStoreDimensionValid(store, configuredDimension)) {
                 org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
                     .warn("Embedding dimension mismatch detected. Expected: {}, clearing old data and creating new store.",
@@ -112,7 +108,7 @@ public class GuideonConfig {
             service.setEmbeddingStore(store);
 
             // Hybrid Search가 활성화된 경우 동일한 스토어 공유
-            if (hybridSearchService != null && configLoader.isHybridSearchEnabled()) {
+            if (hybridSearchService != null && properties.getHybrid().getSearch().getEnabled()) {
                 hybridSearchService.setEmbeddingStore(store);
                 org.slf4j.LoggerFactory.getLogger(GuideonConfig.class)
                     .info("Hybrid Search enabled: Vector Store shared with HybridSearchService");
@@ -125,7 +121,7 @@ public class GuideonConfig {
             service.setEmbeddingStore(newStore);
 
             // Hybrid Search에도 동일한 스토어 설정
-            if (hybridSearchService != null && configLoader.isHybridSearchEnabled()) {
+            if (hybridSearchService != null && properties.getHybrid().getSearch().getEnabled()) {
                 hybridSearchService.setEmbeddingStore(newStore);
             }
         }

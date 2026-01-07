@@ -1,6 +1,6 @@
 package com.guideon.service;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.model.HybridSearchResult;
 import com.guideon.model.ScoredSegment;
 import com.guideon.util.RRFCalculator;
@@ -28,7 +28,7 @@ public class HybridSearchService {
     private final BM25SearchService bm25SearchService;
     private EmbeddingStore<TextSegment> embeddingStore;
     private final EmbeddingService embeddingService;
-    private final ConfigLoader config;
+    private final GuideonProperties properties;
 
     private final boolean enabled;
     private final double vectorWeight;
@@ -39,22 +39,20 @@ public class HybridSearchService {
             BM25SearchService bm25SearchService,
             EmbeddingStore<TextSegment> embeddingStore,
             EmbeddingService embeddingService,
-            ConfigLoader config) {
+            GuideonProperties properties) {
 
         this.bm25SearchService = bm25SearchService;
         this.embeddingStore = embeddingStore;
         this.embeddingService = embeddingService;
-        this.config = config;
+        this.properties = properties;
 
-        this.enabled = config.isHybridSearchEnabled();
-        this.vectorWeight = config.getHybridVectorWeight();
-        this.keywordWeight = config.getHybridKeywordWeight();
-        this.initialResults = config.getHybridInitialResults();
+        this.enabled = properties.getHybrid().getSearch().getEnabled();
+        this.vectorWeight = properties.getHybrid().getSearch().getVectorWeight();
+        this.keywordWeight = properties.getHybrid().getSearch().getKeywordWeight();
+        this.initialResults = properties.getHybrid().getSearch().getInitialResults();
 
-        logger.info("HybridSearchService initialized");
-        logger.info("Hybrid Search Enabled: {}", enabled);
-        logger.info("Vector Weight: {}, Keyword Weight: {}", vectorWeight, keywordWeight);
-        logger.info("Initial Results: {}", initialResults);
+        logger.info("HybridSearchService initialized: enabled={}, vWeight={}, kWeight={}, initResults={}", 
+                enabled, vectorWeight, keywordWeight, initialResults);
     }
 
     /**

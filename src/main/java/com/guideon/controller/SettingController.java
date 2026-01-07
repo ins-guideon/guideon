@@ -1,6 +1,6 @@
 package com.guideon.controller;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.dto.ApiResponse;
 import com.guideon.dto.SettingsDTO;
 import com.guideon.service.RegulationSearchService;
@@ -23,31 +23,31 @@ public class SettingController {
 
     private static final Logger logger = LoggerFactory.getLogger(SettingController.class);
 
-    private final ConfigLoader configLoader;
+    private final GuideonProperties properties;
     private final RegulationSearchService regulationSearchService;
     private SettingsDTO currentSettings;
 
-    public SettingController(ConfigLoader configLoader,
+    public SettingController(GuideonProperties properties,
             RegulationSearchService regulationSearchService) {
-        this.configLoader = configLoader;
+        this.properties = properties;
         this.regulationSearchService = regulationSearchService;
-        // 초기값은 ConfigLoader에서 가져오기
+        // 초기값은 GuideonProperties에서 가져오기
         this.currentSettings = initializeSettings();
         // RegulationSearchService에 초기 설정 적용
         regulationSearchService.applyConfig(currentSettings);
-        logger.info("SettingController initialized with default settings");
+        logger.info("SettingController initialized with default settings from properties");
     }
 
     /**
-     * ConfigLoader에서 초기 설정값 로드
+     * GuideonProperties에서 초기 설정값 로드
      */
     private SettingsDTO initializeSettings() {
         SettingsDTO settings = new SettingsDTO();
-        settings.setApiKey(configLoader.getGeminiApiKey());
-        settings.setSearchModel("gemini-2.5-flash"); // 기본 검색 모델
-        settings.setEmbeddingModel(configLoader.getEmbeddingModelName()); // 임베딩 모델
-        settings.setChunkSize(configLoader.getRagChunkSize());
-        settings.setChunkOverlap(configLoader.getRagChunkOverlap());
+        settings.setApiKey(properties.getGemini().getApi().getKey());
+        settings.setSearchModel(properties.getGemini().getChat().getModelName());
+        settings.setEmbeddingModel(properties.getEmbedding().getModel().getName());
+        settings.setChunkSize(properties.getRag().getChunk().getSize());
+        settings.setChunkOverlap(properties.getRag().getChunk().getOverlap());
         return settings;
     }
 

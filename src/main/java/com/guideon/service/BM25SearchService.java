@@ -1,6 +1,6 @@
 package com.guideon.service;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.model.DocumentMetadata;
 import com.guideon.model.ScoredSegment;
 import com.guideon.util.LuceneAnalyzerFactory;
@@ -32,7 +32,7 @@ import java.util.List;
 public class BM25SearchService {
     private static final Logger logger = LoggerFactory.getLogger(BM25SearchService.class);
 
-    private final Directory directory;
+    private Directory directory;
     private final Analyzer indexingAnalyzer;  // 인덱싱용
     private final Analyzer searchAnalyzer;    // 검색용
     private IndexWriter indexWriter;
@@ -44,12 +44,12 @@ public class BM25SearchService {
     private final float b;
 
     /**
-     * ConfigLoader 기반 생성자
+     * GuideonProperties 기반 생성자
      */
-    public BM25SearchService(ConfigLoader config) throws IOException {
-        this.indexPath = config.getBM25IndexDirectory();
-        this.k1 = (float) config.getBM25K1();
-        this.b = (float) config.getBM25B();
+    public BM25SearchService(GuideonProperties properties) throws IOException {
+        this.indexPath = properties.getBm25().getIndex().getDirectory();
+        this.k1 = properties.getBm25().getIndex().getK1().floatValue();
+        this.b = properties.getBm25().getIndex().getB().floatValue();
 
         // 인덱스 디렉토리 생성
         Path path = Paths.get(indexPath);
@@ -65,8 +65,6 @@ public class BM25SearchService {
         initializeIndexWriter();
 
         logger.info("BM25SearchService initialized: path={}, k1={}, b={}", indexPath, k1, b);
-        logger.info("  - Indexing Analyzer: EnhancedKoreanAnalyzer (with stopwords)");
-        logger.info("  - Search Analyzer: SearchQueryAnalyzer (minimal filtering)");
     }
 
     /**
@@ -112,6 +110,7 @@ public class BM25SearchService {
             doc.add(new StringField(DocumentMetadata.FILENAME, filename, Field.Store.YES));
         }
 
+        ensureOpen();
         indexWriter.addDocument(doc);
 
         logger.debug("Indexed segment: id={}, type={}, documentId={}, contentLength={}",
@@ -161,6 +160,7 @@ public class BM25SearchService {
      * IndexReader 갱신 (검색 전 필수)
      */
     private void refreshIndexReader() throws IOException {
+        ensureOpen();
         if (indexReader == null) {
             indexReader = DirectoryReader.open(indexWriter);
             indexSearcher = new IndexSearcher(indexReader);
@@ -177,9 +177,49 @@ public class BM25SearchService {
     }
 
     /**
+     * IndexWriter가 열려있는지 확인하고, 닫혀있으면 재색인
+     */
+    private synchronized void ensureOpen() throws IOException {
+        if (indexWriter == null || !indexWriter.isOpen()) {
+            logger.info("IndexWriter is closed or null. Re-initializing...");
+            
+            // 만약 디렉토리도 닫혔을 가능성이 있다면 다시 열기
+            Path path = Paths.get(indexPath);
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
+            }
+            
+            // 기존 디렉토리 정리 및 재오픈
+            if (this.directory != null) {
+                try {
+                    this.directory.close();
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+            this.directory = FSDirectory.open(path);
+            
+            // IndexWriter 초기화
+            initializeIndexWriter();
+            
+            // 기존 reader와 searcher 초기화 (새 writer에 맞춰 다시 생성되도록)
+            if (indexReader != null) {
+                try {
+                    indexReader.close();
+                } catch (IOException e) {
+                    logger.warn("Failed to close old indexReader during re-initialization", e);
+                }
+                indexReader = null;
+                indexSearcher = null;
+            }
+        }
+    }
+
+    /**
      * 인덱스 커밋
      */
     public void commit() throws IOException {
+        ensureOpen();
         if (indexWriter != null) {
             indexWriter.commit();
             logger.info("BM25 index committed");
@@ -190,6 +230,7 @@ public class BM25SearchService {
      * 인덱스 초기화 (모든 문서 삭제)
      */
     public void clearIndex() throws IOException {
+        ensureOpen();
         if (indexWriter != null) {
             indexWriter.deleteAll();
             indexWriter.commit();
@@ -213,6 +254,7 @@ public class BM25SearchService {
             // IndexReader 갱신
             refreshIndexReader();
 
+            ensureOpen();
             // document_id로 검색하여 삭제할 문서 찾기
             Term term = new Term("document_id", documentId);
             long deletedLong = indexWriter.deleteDocuments(term);

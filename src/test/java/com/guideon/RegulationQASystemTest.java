@@ -1,12 +1,13 @@
 package com.guideon;
 
-import com.guideon.config.ConfigLoader;
 import com.guideon.model.RegulationSearchResult;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,22 +15,20 @@ import static org.junit.jupiter.api.Assertions.*;
  * RegulationQASystem 통합 테스트 클래스
  * 전체 시스템의 End-to-End 테스트
  */
+@SpringBootTest
 @DisplayName("RegulationQASystem 통합 테스트")
 class RegulationQASystemTest {
 
+    @Autowired
     private RegulationQASystem system;
 
     @BeforeEach
     void setUp() {
         try {
-            system = new RegulationQASystem();
-            System.out.println("✓ RegulationQASystem 초기화 성공");
-
             // 테스트용 샘플 문서 업로드
             uploadSampleDocuments();
-        } catch (IllegalStateException e) {
-            System.err.println("⚠ API 키가 설정되지 않았습니다. 일부 테스트를 건너뜁니다.");
-            System.err.println("환경변수 GOOGLE_API_KEY 또는 application.properties 설정 필요");
+        } catch (Exception e) {
+            System.err.println("⚠ 서비스 초기화 중 오류가 발생했습니다. API 키 설정을 확인하세요.");
         }
     }
 
@@ -85,14 +84,6 @@ class RegulationQASystemTest {
         system.uploadRegulationDocument(travelDoc, "출장여비지급규정");
 
         System.out.println("✓ 샘플 문서 업로드 완료 (취업규칙, 출장여비지급규정)");
-    }
-
-    /**
-     * Document 객체 생성을 위한 헬퍼 메서드
-     */
-    private void uploadRegulationDocument(RegulationQASystem system, String content, String regulationType) {
-        Document doc = new Document(content, new Metadata());
-        system.uploadRegulationDocument(doc, regulationType);
     }
 
     @Test

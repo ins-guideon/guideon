@@ -1,5 +1,6 @@
 package com.guideon.service;
 
+import com.guideon.config.GuideonProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,8 @@ public class FileStorageService {
 
     private final String uploadDir;
 
-    public FileStorageService() {
-        this.uploadDir = System.getProperty("user.home") + "/guideon/uploads";
+    public FileStorageService(GuideonProperties properties) {
+        this.uploadDir = properties.getStorage().getUploadDir();
 
         try {
             Files.createDirectories(Paths.get(uploadDir));

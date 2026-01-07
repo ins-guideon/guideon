@@ -1,6 +1,6 @@
 package com.guideon;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.model.QueryAnalysisResult;
 import com.guideon.model.RegulationSearchResult;
 import com.guideon.model.prompt.IntentMetadata;
@@ -14,6 +14,8 @@ import dev.langchain4j.data.document.Metadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.*;
 
@@ -23,12 +25,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * 메타데이터 적용 전후 비교 테스트
  * 메타데이터가 답변 생성 품질에 미치는 영향을 측정합니다.
  */
+@SpringBootTest
 @DisplayName("메타데이터 전후 비교 테스트")
 class MetadataComparisonTest {
 
+    @Autowired
+    private GuideonProperties properties;
+
     private QueryAnalysisService queryAnalysisService;
     private RegulationSearchService regulationSearchService;
-    private ConfigLoader config;
     private TestResultRecorder.TestResultSet beforeAnswerResults;
     private TestResultRecorder.TestResultSet afterAnswerResults;
 
@@ -80,18 +85,16 @@ class MetadataComparisonTest {
 
     @BeforeEach
     void setUp() {
-        config = new ConfigLoader();
         try {
-            queryAnalysisService = new QueryAnalysisService(config);
-            regulationSearchService = new RegulationSearchService(config, null);
+            queryAnalysisService = new QueryAnalysisService(properties);
+            regulationSearchService = new RegulationSearchService(properties, null);
             System.out.println("✓ QueryAnalysisService 초기화 성공");
             System.out.println("✓ RegulationSearchService 초기화 성공");
             
             // 테스트용 샘플 문서 인덱싱
             indexSampleDocuments();
-        } catch (IllegalStateException e) {
-            System.err.println("⚠ API 키가 설정되지 않았습니다. 테스트를 건너뜁니다.");
-            System.err.println("환경변수 GOOGLE_API_KEY 또는 application.properties 설정 필요");
+        } catch (Exception e) {
+            System.err.println("⚠ 서비스 초기화 중 오류가 발생했습니다. API 키 설정을 확인하세요.");
         }
 
         beforeAnswerResults = new TestResultRecorder.TestResultSet();
@@ -437,4 +440,3 @@ class MetadataComparisonTest {
         System.out.println("\n✓ 메타데이터 품질 검증 완료");
     }
 }
-

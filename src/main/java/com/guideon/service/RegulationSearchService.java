@@ -1,6 +1,6 @@
 package com.guideon.service;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.dto.SettingsDTO;
 import com.guideon.model.DocumentMetadata;
 import com.guideon.model.HybridSearchResult;
@@ -47,6 +47,7 @@ public class RegulationSearchService {
     private String currentApiKey;
     private String currentSearchModel;
     private String currentEmbeddingModel;
+    private double currentChatTemperature;
 
     private final int maxResults;
     private final double minScore;
@@ -63,52 +64,54 @@ public class RegulationSearchService {
     private final boolean hybridSearchEnabled;
 
     /**
-     * application.properties 기반 생성자
+     * GuideonProperties 기반 생성자
      */
-    public RegulationSearchService(ConfigLoader config, HybridSearchService hybridSearchService) {
-        String apiKey = config.getGeminiApiKey();
-        String searchModel = "gemini-2.5-flash"; // 기본값
-        String embeddingModel = config.getEmbeddingModelName();
+    public RegulationSearchService(GuideonProperties properties, HybridSearchService hybridSearchService) {
+        String apiKey = properties.getGemini().getApi().getKey();
+        String searchModel = properties.getGemini().getChat().getModelName();
+        String embeddingModel = properties.getEmbedding().getModel().getName();
+        double chatTemperature = properties.getGemini().getChat().getTemperature();
 
         // 모델 정보 저장
         this.currentApiKey = apiKey;
         this.currentSearchModel = searchModel;
         this.currentEmbeddingModel = embeddingModel;
+        this.currentChatTemperature = chatTemperature;
 
         // 모델 초기화 (동기화)
-        initializeModels(apiKey, searchModel, embeddingModel);
+        initializeModels(apiKey, searchModel, embeddingModel, chatTemperature);
 
         // In-Memory Embedding Store (실제 운영시 Qdrant로 교체)
         this.embeddingStore = new InMemoryEmbeddingStore<>();
 
         // Hybrid Search Service
         this.hybridSearchService = hybridSearchService;
-        this.hybridSearchEnabled = config.isHybridSearchEnabled();
+        this.hybridSearchEnabled = properties.getHybrid().getSearch().getEnabled();
 
-        // Properties에서 설정값 로드
-        this.maxResults = config.getVectorSearchMaxResults();
-        this.minScore = config.getVectorSearchMinScore();
-        this.chunkSize = config.getRagChunkSize();
-        this.chunkOverlap = config.getRagChunkOverlap();
+        // 설정값 로드
+        this.maxResults = properties.getVector().getSearch().getMaxResults();
+        this.minScore = properties.getVector().getSearch().getMinScore();
+        this.chunkSize = properties.getRag().getChunk().getSize();
+        this.chunkOverlap = properties.getRag().getChunk().getOverlap();
 
         // ReRanking 설정 로드
-        this.reRankingEnabled = config.isReRankingEnabled();
-        this.reRankingInitialResults = config.getReRankingInitialResults();
-        this.reRankingFinalResults = config.getReRankingFinalResults();
-        this.reRankingMinScore = config.getReRankingMinScore();
+        this.reRankingEnabled = properties.getReranking().getEnabled();
+        this.reRankingInitialResults = properties.getReranking().getInitialResults();
+        this.reRankingFinalResults = properties.getReranking().getFinalResults();
+        this.reRankingMinScore = properties.getReranking().getMinScore();
 
         logger.info("ReRanking configuration loaded: enabled={}, initialResults={}, finalResults={}, minScore={}",
                 reRankingEnabled, reRankingInitialResults, reRankingFinalResults, reRankingMinScore);
 
         // Cohere Scoring Model 초기화 (ReRanking용)
-        String cohereApiKey = config.getCohereApiKey();
+        String cohereApiKey = properties.getCohere().getApi().getKey();
         logger.info("Cohere API key configured: {}", cohereApiKey != null && !cohereApiKey.isEmpty() ? "YES" : "NO");
         if (reRankingEnabled && cohereApiKey != null && !cohereApiKey.isEmpty()) {
             this.scoringModel = CohereScoringModel.builder()
                     .apiKey(cohereApiKey)
-                    .modelName(config.getReRankingModelName())
+                    .modelName(properties.getReranking().getModelName())
                     .build();
-            logger.info("ReRanking enabled with Cohere model: {}", config.getReRankingModelName());
+            logger.info("ReRanking enabled with Cohere model: {}", properties.getReranking().getModelName());
         } else {
             this.scoringModel = null;
             if (reRankingEnabled) {
@@ -124,19 +127,18 @@ public class RegulationSearchService {
 
     /**
      * 모델 초기화 (동기화 보장)
-     * 초기화가 성공한 후에만 전역 변수를 업데이트합니다.
-     * 예외 발생 시 synchronized 블록은 자동으로 해제되지만, modelsInitialized 상태는 복구됩니다.
      */
-    private void initializeModels(String apiKey, String searchModel, String embeddingModel) {
+    private void initializeModels(String apiKey, String searchModel, String embeddingModel, double chatTemperature) {
         synchronized (modelInitLock) {
             try {
-                logger.info("Initializing models: searchModel={}, embeddingModel={}", searchModel, embeddingModel);
+                logger.info("Initializing models: searchModel={}, embeddingModel={}, chatTemperature={}", 
+                        searchModel, embeddingModel, chatTemperature);
 
                 // 모델 초기화를 먼저 수행 (로컬 변수에 저장)
                 ChatLanguageModel newChatModel = GoogleAiGeminiChatModel.builder()
                         .apiKey(apiKey)
                         .modelName(searchModel)
-                        .temperature(0.2)
+                        .temperature(chatTemperature)
                         .build();
 
                 EmbeddingModel newEmbeddingModel = GoogleAiEmbeddingModel.builder()
@@ -151,16 +153,15 @@ public class RegulationSearchService {
                 this.currentApiKey = apiKey;
                 this.currentSearchModel = searchModel;
                 this.currentEmbeddingModel = embeddingModel;
+                this.currentChatTemperature = chatTemperature;
                 this.modelsInitialized = true;
 
-                logger.info("Models initialized successfully: searchModel={}, embeddingModel={}", searchModel,
-                        embeddingModel);
+                logger.info("Models initialized successfully");
 
                 // 대기 중인 스레드에 알림
                 modelInitLock.notifyAll();
             } catch (Exception e) {
                 // 예외 발생 시 modelsInitialized 복구 (기존 모델이 여전히 유효함)
-                // synchronized 블록은 자동으로 해제되지만, 대기 중인 스레드를 깨워야 함
                 modelsInitialized = true;
                 modelInitLock.notifyAll();
                 throw new RuntimeException("모델 초기화 중 오류가 발생했습니다: " + e.getMessage(), e);
@@ -212,43 +213,6 @@ public class RegulationSearchService {
             throw new IllegalStateException("Embedding model is not initialized");
         }
         return embeddingModel;
-    }
-
-    /**
-     * API 키 직접 전달 생성자 (하위 호환성)
-     */
-    @Deprecated
-    public RegulationSearchService(String geminiApiKey) {
-        // 모델 정보 저장
-        this.currentApiKey = geminiApiKey;
-        this.currentSearchModel = "gemini-2.5-flash";
-        this.currentEmbeddingModel = "text-embedding-004";
-
-        // 모델 초기화 (동기화)
-        initializeModels(geminiApiKey, currentSearchModel, currentEmbeddingModel);
-
-        // In-Memory Embedding Store (실제 운영시 Qdrant로 교체)
-        this.embeddingStore = new InMemoryEmbeddingStore<>();
-
-        // Hybrid Search (비활성화)
-        this.hybridSearchService = null;
-        this.hybridSearchEnabled = false;
-
-        // 기본값 사용
-        this.maxResults = 5;
-        this.minScore = 0.5;
-        this.chunkSize = 500;
-        this.chunkOverlap = 100;
-
-        // ReRanking 기본값 (비활성화)
-        this.reRankingEnabled = false;
-        this.reRankingInitialResults = 20;
-        this.reRankingFinalResults = 5;
-        this.reRankingMinScore = 0.8;
-        this.scoringModel = null;
-
-        logger.info(
-                "RegulationSearchService initialized with default values (ReRanking disabled, Hybrid Search disabled)");
     }
 
     /**
@@ -964,7 +928,7 @@ public class RegulationSearchService {
 
             synchronized (modelInitLock) {
                 modelsInitialized = false;
-                initializeModels(newApiKey, newSearchModel, newEmbeddingModel);
+                initializeModels(newApiKey, newSearchModel, newEmbeddingModel, currentChatTemperature);
             }
         }
     }

@@ -1,6 +1,6 @@
 package com.guideon.service;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.model.QueryAnalysisResult;
 import com.guideon.model.RegulationSearchResult;
 import dev.langchain4j.data.document.Document;
@@ -8,6 +8,9 @@ import dev.langchain4j.data.document.Metadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Arrays;
 
@@ -17,25 +20,26 @@ import static org.junit.jupiter.api.Assertions.*;
  * RegulationSearchService 테스트 클래스
  * RAG 기반 규정 검색 및 답변 생성 기능 테스트
  */
+@SpringBootTest
 @DisplayName("RegulationSearchService 테스트")
 class RegulationSearchServiceTest {
 
+    @Autowired
+    private GuideonProperties properties;
+
     private RegulationSearchService service;
-    private ConfigLoader config;
 
     @BeforeEach
     void setUp() {
-        config = new ConfigLoader();
-
         try {
             // Hybrid Search는 테스트에서 비활성화 (null 전달)
-            service = new RegulationSearchService(config, null);
+            service = new RegulationSearchService(properties, null);
             System.out.println("✓ RegulationSearchService 초기화 성공");
 
             // 테스트용 샘플 문서 인덱싱
             indexSampleDocuments();
-        } catch (IllegalStateException e) {
-            System.err.println("⚠ API 키가 설정되지 않았습니다. 일부 테스트를 건너뜁니다.");
+        } catch (Exception e) {
+            System.err.println("⚠ 서비스 초기화 중 오류가 발생했습니다. API 키 설정을 확인하세요.");
         }
     }
 
@@ -126,7 +130,7 @@ class RegulationSearchServiceTest {
     @Test
     @DisplayName("1. 서비스 초기화 및 문서 인덱싱 테스트")
     void testServiceInitialization() {
-        assertNotNull(config, "ConfigLoader가 null이면 안됩니다");
+        assertNotNull(properties, "GuideonProperties가 null이면 안됩니다");
 
         if (service != null) {
             System.out.println("✓ RegulationSearchService 정상 초기화됨");

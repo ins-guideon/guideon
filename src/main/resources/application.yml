@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
   servlet:
     context-path: /
     encoding:
@@ -19,10 +19,10 @@ spring:
   application:
     name: guideon
   datasource:
-    url: jdbc:h2:file:./data/guideon;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: ${DB_URL:jdbc:h2:file:./data/guideon;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
     driver-class-name: org.h2.Driver
-    username: sa
-    password: 
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
   jpa:
     hibernate:
       ddl-auto: update
@@ -50,11 +50,26 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
+  mail:
+    host: ${MAIL_HOST:ezsmtp.bizmeka.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 # Google Gemini API Configuration
 gemini:
   api:
-    key: AIzaSyBWZ83Rm7M2MQc_RZdg24NC9KsS-OMYtks
+    key:  ${GEMINI_API_KEY:AIzaSyBWZ83Rm7M2MQc_RZdg24NC9KsS-OMYtks}
+  chat:
+    model-name: ${GEMINI_MODEL_NAME:gemini-2.5-flash}
+    temperature: ${GEMINI_TEMPERATURE:0.2}
 
 # Cohere API Configuration (for ReRanking)
 cohere:
@@ -64,36 +79,55 @@ cohere:
 # Embedding Configuration (Google AI Gemini - 한국어 지원)
 embedding:
   model:
-    name: text-embedding-004
+    name: ${EMBEDDING_MODEL_NAME:text-embedding-004}
   dimension: 768
 
 # Vector Search Configuration
 vector:
   search:
-    max-results: 5
-    min-score: 0.5
+    max-results: ${VECTOR_SEARCH_MAX_RESULTS:5}
+    min-score: ${VECTOR_SEARCH_MIN_SCORE:0.5}
 
 # ReRanking Configuration (Cohere)
 reranking:
-  enabled: true
-  model-name: rerank-multilingual-v3.0
-  initial-results: 20
-  final-results: 5
-  min-score: 0.8
+  enabled: ${RERANKING_ENABLED:true}
+  model-name: ${RERANKING_MODEL_NAME:rerank-multilingual-v3.0}
+  initial-results: ${RERANKING_INITIAL_RESULTS:20}
+  final-results: ${RERANKING_FINAL_RESULTS:5}
+  min-score: ${RERANKING_MIN_SCORE:0.8}
+
+# Hybrid Search Configuration
+hybrid:
+  search:
+    enabled: ${HYBRID_SEARCH_ENABLED:true}
+    vector-weight: ${HYBRID_VECTOR_WEIGHT:0.4}
+    keyword-weight: ${HYBRID_KEYWORD_WEIGHT:0.6}
+    initial-results: ${HYBRID_INITIAL_RESULTS:40}
+
+# BM25 Configuration (Apache Lucene)
+bm25:
+  index:
+    directory: ${BM25_INDEX_DIR:./data/bm25-index}
+    k1: 1.2
+    b: 0.75
 
 # RAG Configuration
 rag:
   chunk:
-    size: 500
-    overlap: 100
+    size: ${RAG_CHUNK_SIZE:500}
+    overlap: ${RAG_CHUNK_OVERLAP:100}
+
+# Storage Configuration
+storage:
+  upload-dir: ${STORAGE_UPLOAD_DIR:./uploads}
 
 # Vector Store Persistence Configuration
 vectorstore:
   persistence:
-    enabled: true
-    data-dir: ${user.home}/guideon/data
-    auto-save: true
-    auto-load: true
+    enabled: ${VECTORSTORE_PERSISTENCE_ENABLED:true}
+    data-dir: ${VECTORSTORE_DATA_DIR:./data}
+    auto-save: ${VECTORSTORE_AUTO_SAVE:true}
+    auto-load: ${VECTORSTORE_AUTO_LOAD:true}
 
 # Logging Configuration
 logging:

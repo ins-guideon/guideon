@@ -1,5 +1,6 @@
 package com.guideon.service;
 
+import com.guideon.config.GuideonProperties;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
@@ -24,8 +25,8 @@ public class VectorStoreService {
     private final String dataDir;
     private final String embeddingStoreFile;
 
-    public VectorStoreService() {
-        this.dataDir = System.getProperty("user.home") + "/guideon/data";
+    public VectorStoreService(GuideonProperties properties) {
+        this.dataDir = properties.getVectorstore().getPersistence().getDataDir();
         this.embeddingStoreFile = dataDir + "/embedding_store.json";
 
         // 데이터 디렉토리 생성

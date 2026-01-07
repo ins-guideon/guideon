@@ -1,10 +1,12 @@
 package com.guideon.service;
 
-import com.guideon.config.ConfigLoader;
+import com.guideon.config.GuideonProperties;
 import com.guideon.model.QueryAnalysisResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
@@ -14,30 +16,29 @@ import static org.junit.jupiter.api.Assertions.*;
  * QueryAnalysisService 테스트 클래스
  * 자연어 질문 분석 기능 테스트
  */
+@SpringBootTest
 @DisplayName("QueryAnalysisService 테스트")
 class QueryAnalysisServiceTest {
 
+    @Autowired
+    private GuideonProperties properties;
+
     private QueryAnalysisService service;
-    private ConfigLoader config;
 
     @BeforeEach
     void setUp() {
-        // 테스트용 ConfigLoader 초기화
-        config = new ConfigLoader();
-
         try {
-            service = new QueryAnalysisService(config);
+            service = new QueryAnalysisService(properties);
             System.out.println("✓ QueryAnalysisService 초기화 성공");
-        } catch (IllegalStateException e) {
-            System.err.println("⚠ API 키가 설정되지 않았습니다. 일부 테스트를 건너뜁니다.");
-            System.err.println("환경변수 GOOGLE_API_KEY 또는 application.properties 설정 필요");
+        } catch (Exception e) {
+            System.err.println("⚠ 서비스 초기화 중 오류가 발생했습니다. API 키 설정을 확인하세요.");
         }
     }
 
     @Test
     @DisplayName("1. 서비스 초기화 테스트")
     void testServiceInitialization() {
-        assertNotNull(config, "ConfigLoader가 null이면 안됩니다");
+        assertNotNull(properties, "GuideonProperties가 null이면 안됩니다");
 
         if (service != null) {
             System.out.println("✓ QueryAnalysisService 정상 초기화됨");
