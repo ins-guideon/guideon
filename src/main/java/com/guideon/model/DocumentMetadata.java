@@ -36,7 +36,7 @@ public class DocumentMetadata {
     @Column(nullable = false)
     private Instant uploadTime;
 
-    @Column(columnDefinition = "CLOB")
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -81,7 +81,7 @@ public class DocumentViewController {
         logger.info("문서 상세 조회 요청: {}", id);
 
         try {
-            DocumentMetadata document = documentRepository.findById(id)
+            DocumentMetadata document = documentRepository.findByIdWithUploader(id)
                     .orElseThrow(() -> new IllegalArgumentException("문서를 찾을 수 없습니다: " + id));
 
             DocumentDetailResponse response = new DocumentDetailResponse(
